@@ -1,296 +1,321 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import API from "../api";
-import { BottomNav } from "./classes";
 
-export default function Papers() {
+function Papers() {
   const { subjectId } = useParams();
   const [papers, setPapers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [downloading, setDownloading] = useState(null);
   const [activeYear, setActiveYear] = useState("All");
-  const [bookmarks, setBookmarks] = useState(() => JSON.parse(localStorage.getItem("bookmarks") || "[]"));
-  const [toastMsg, setToastMsg] = useState("");
 
   useEffect(() => {
     setLoading(true);
-    API.get(`papers/${subjectId}/`).then(r=>setPapers(r.data)).catch(()=>{}).finally(()=>setLoading(false));
+    API.get(`papers/${subjectId}/`)
+      .then(res => setPapers(res.data))
+      .catch(err => console.error(err))
+      .finally(() => setLoading(false));
   }, [subjectId]);
 
-  const years = ["All", ...new Set(papers.map(p=>p.year).sort((a,b)=>b-a))];
-  const filtered = papers.filter(p =>
-    p.title.toLowerCase().includes(search.toLowerCase()) &&
-    (activeYear==="All" || p.year===activeYear)
-  );
+  const years = ["All", ...new Set(papers.map(p => p.year).sort((a, b) => b - a))];
 
-  const isBookmarked = (id) => bookmarks.some(b => b.id === id);
-
-  const toggleBookmark = (paper) => {
-    let next;
-    if (isBookmarked(paper.id)) {
-      next = bookmarks.filter(b => b.id !== paper.id);
-      showToast("Removed from saved ✕");
-    } else {
-      next = [...bookmarks, { id: paper.id, title: paper.title, year: paper.year, pdf: paper.pdf, subjectId }];
-      showToast("Saved! ⭐");
-    }
-    setBookmarks(next);
-    localStorage.setItem("bookmarks", JSON.stringify(next));
-  };
-
-  const showToast = (msg) => {
-    setToastMsg(msg);
-    setTimeout(() => setToastMsg(""), 2200);
-  };
+  const filtered = papers.filter(p => {
+    const matchSearch = p.title.toLowerCase().includes(search.toLowerCase());
+    const matchYear = activeYear === "All" || p.year === activeYear;
+    return matchSearch && matchYear;
+  });
 
   const handleDownload = async (paper) => {
     if (!paper.pdf) return;
     setDownloading(paper.id);
     try {
-      const r = await fetch(paper.pdf);
-      if (!r.ok) throw new Error();
-      const blob = await r.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href=url; a.download=`${paper.title}_${paper.year}.pdf`;
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      setTimeout(()=>URL.revokeObjectURL(url),5000);
-      showToast("Download started ⬇");
-    } catch { alert("Download failed. Try opening the PDF manually."); }
-    finally { setDownloading(null); }
+      const response = await fetch(paper.pdf);
+      if (!response.ok) throw new Error("Failed");
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `${paper.title}_${paper.year}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+    } catch {
+      alert("Download failed. Try opening the PDF manually.");
+    } finally {
+      setDownloading(null);
+    }
   };
 
   return (
-    <>
-      <div className="root">
-        <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Outfit:wght@300;400;500;600;700&display=swap');
-          *, *::before, *::after { box-sizing:border-box;margin:0;padding:0; }
-          :root {
-            --g1:rgba(255,255,255,0.06);--gb:rgba(255,255,255,0.11);
-            --t1:rgba(255,255,255,0.95);--t2:rgba(255,255,255,0.52);--t3:rgba(255,255,255,0.26);
-            --ac:#C084FC;--green:#34D399;--blue:#60A5FA;--bg:#050510;
-          }
-          html,body{background:var(--bg);-webkit-font-smoothing:antialiased;overscroll-behavior:none;}
-          .root {
-            min-height:100vh;min-height:100dvh;background:var(--bg);
-            font-family:'Outfit',sans-serif;color:var(--t1);
-            overflow-x:hidden;
-            padding-bottom:calc(max(env(safe-area-inset-bottom),14px) + 68px);
-          }
-          .scene{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
-          .o{position:absolute;border-radius:50%;filter:blur(100px);animation:drift var(--d,14s) ease-in-out infinite alternate;}
-          .o1{width:450px;height:450px;top:-100px;left:-100px;background:radial-gradient(circle,#4F46E5,#7C3AED,transparent 70%);opacity:0.28;--d:18s;}
-          .o2{width:350px;height:350px;bottom:15%;right:-70px;background:radial-gradient(circle,#EC4899,#8B5CF6,transparent 70%);opacity:0.22;--d:22s;}
-          @keyframes drift{0%{transform:translate(0,0)}100%{transform:translate(25px,-25px)}}
-          .grid-bg{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0.025;background-image:linear-gradient(rgba(255,255,255,0.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.5) 1px,transparent 1px);background-size:60px 60px;}
-          .grain{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0.04;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:256px;}
-          .page{position:relative;z-index:2;animation:pageIn 0.5s ease 0.1s both;}
-          @keyframes pageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    <div className="root">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+          --bg: #F7F7F8; --white: #FFFFFF; --ink: #111118;
+          --ink2: #3D3D4A; --muted: #9898A8; --border: #E8E8EE;
+          --red: #E63946; --green: #16A34A; --blue: #2D6BE4;
+          --shadow-sm: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+        }
+        html, body { background: var(--bg); }
+        .root {
+          min-height: 100vh; min-height: 100dvh;
+          background: var(--bg);
+          font-family: 'Inter', -apple-system, sans-serif;
+          color: var(--ink);
+          padding-bottom: max(env(safe-area-inset-bottom), 32px);
+          -webkit-font-smoothing: antialiased;
+        }
 
-          .topbar{background:rgba(5,5,16,0.8);border-bottom:1px solid var(--gb);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);padding:max(env(safe-area-inset-top),52px) 20px 18px;position:sticky;top:0;z-index:20;}
-          .trow{display:flex;align-items:center;gap:12px;}
-          .back{width:40px;height:40px;border-radius:13px;flex-shrink:0;background:var(--g1);border:1px solid var(--gb);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--ac);text-decoration:none;transition:transform 0.2s,opacity 0.2s;-webkit-tap-highlight-color:transparent;}
-          .back:active{transform:scale(0.88);opacity:0.6;}
-          .tinfo{flex:1;min-width:0;}
-          .title-row{display:flex;align-items:center;gap:8px;}
-          .ttitle{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;letter-spacing:-0.4px;}
-          .count-chip{font-size:12px;font-weight:700;color:var(--ac);background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.22);padding:3px 11px;border-radius:100px;}
-          .tsub{font-size:12px;color:var(--t2);margin-top:2px;}
+        /* Topbar */
+        .topbar {
+          background: var(--white);
+          padding: max(env(safe-area-inset-top), 52px) 20px 18px;
+          border-bottom: 1px solid var(--border);
+          position: sticky; top: 0; z-index: 10;
+        }
+        .topbar-row { display: flex; align-items: center; gap: 12px; }
+        .back-btn {
+          width: 40px; height: 40px; border-radius: 12px;
+          background: var(--bg); border: 1.5px solid var(--border);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 20px; color: var(--ink2);
+          text-decoration: none; flex-shrink: 0;
+          -webkit-tap-highlight-color: transparent; transition: background 0.15s;
+        }
+        .back-btn:active { background: var(--border); }
+        .topbar-info { flex: 1; min-width: 0; }
+        .topbar-row2 {
+          display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+        }
+        .topbar-title { font-size: 22px; font-weight: 800; letter-spacing: -0.4px; }
+        .count-badge {
+          font-size: 12px; font-weight: 700;
+          background: #FFF0F0; color: var(--red);
+          padding: 3px 10px; border-radius: 100px;
+        }
+        .topbar-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
-          .search-wrap{padding:14px 20px 0;}
-          .sbox{display:flex;align-items:center;gap:10px;background:var(--g1);border:1px solid var(--gb);border-radius:16px;padding:0 16px;backdrop-filter:blur(16px);transition:border-color 0.25s,box-shadow 0.25s;}
-          .sbox:focus-within{border-color:rgba(192,132,252,0.5);box-shadow:0 0 0 4px rgba(168,85,247,0.1);}
-          .s-ico{font-size:15px;opacity:0.25;flex-shrink:0;}
-          .s-in{flex:1;border:none;outline:none;padding:14px 0;font-family:'Outfit',sans-serif;font-size:15px;color:var(--t1);background:transparent;}
-          .s-in::placeholder{color:var(--t3);}
-          .s-clr{border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.07);color:var(--t2);width:22px;height:22px;border-radius:6px;font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+        /* Search */
+        .search-section { padding: 14px 16px 0; }
+        .search-box {
+          display: flex; align-items: center; gap: 10px;
+          background: var(--white); border: 1.5px solid var(--border);
+          border-radius: 12px; padding: 0 14px;
+          box-shadow: var(--shadow-sm); transition: border-color 0.2s;
+        }
+        .search-box:focus-within { border-color: var(--red); box-shadow: 0 0 0 3px rgba(230,57,70,0.08); }
+        .search-ico { font-size: 16px; flex-shrink: 0; opacity: 0.4; }
+        .search-input {
+          flex: 1; border: none; outline: none; padding: 13px 0;
+          font-family: 'Inter', sans-serif; font-size: 15px;
+          color: var(--ink); background: transparent;
+        }
+        .search-input::placeholder { color: var(--muted); }
+        .search-clear {
+          font-size: 16px; cursor: pointer; opacity: 0.5; flex-shrink: 0;
+          padding: 4px; border: none; background: none;
+          -webkit-tap-highlight-color: transparent;
+        }
 
-          .year-row{display:flex;gap:8px;overflow-x:auto;padding:12px 20px 0;scrollbar-width:none;}
-          .year-row::-webkit-scrollbar{display:none;}
-          .ypill{background:var(--g1);border:1px solid var(--gb);backdrop-filter:blur(10px);border-radius:100px;padding:8px 18px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;color:var(--t2);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all 0.2s cubic-bezier(0.34,1.56,0.64,1);-webkit-tap-highlight-color:transparent;}
-          .ypill.active{background:linear-gradient(135deg,#7C3AED,#4F46E5);border-color:transparent;color:#fff;font-weight:700;box-shadow:0 4px 18px rgba(124,58,237,0.4);}
-          .ypill:not(.active):active{transform:scale(0.93);}
+        /* Year pills */
+        .year-row {
+          display: flex; gap: 8px; overflow-x: auto;
+          padding: 12px 16px 0; scrollbar-width: none;
+        }
+        .year-row::-webkit-scrollbar { display: none; }
+        .year-pill {
+          background: var(--white); border: 1.5px solid var(--border);
+          border-radius: 100px; padding: 7px 16px;
+          font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+          color: var(--ink2); cursor: pointer; white-space: nowrap; flex-shrink: 0;
+          box-shadow: var(--shadow-sm); transition: all 0.15s;
+          -webkit-tap-highlight-color: transparent;
+        }
+        .year-pill.active {
+          background: var(--ink); border-color: var(--ink);
+          color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .year-pill:active { transform: scale(0.95); }
 
-          .sec-bar{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 10px;}
-          .sec-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:0.14em;display:flex;align-items:center;gap:8px;}
-          .sec-title::before{content:'';display:block;width:14px;height:2px;background:linear-gradient(90deg,#C084FC,#818CF8);border-radius:2px;}
-          .sec-count{font-size:12px;color:var(--ac);}
+        /* Section label */
+        .section-label {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 14px 16px 10px;
+        }
+        .label-text { font-size: 13px; font-weight: 700; color: var(--ink2); text-transform: uppercase; letter-spacing: 0.08em; }
+        .label-count { font-size: 12px; font-weight: 600; background: #F0F0F5; color: var(--muted); padding: 3px 10px; border-radius: 100px; }
 
-          .papers{padding:0 20px 20px;display:flex;flex-direction:column;gap:12px;}
+        /* Papers */
+        .papers { padding: 0 16px 20px; display: flex; flex-direction: column; gap: 10px; }
 
-          .pcard{background:var(--g1);border:1px solid var(--gb);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:22px;overflow:hidden;transition:transform 0.15s;-webkit-tap-highlight-color:transparent;animation:cardIn 0.35s ease both;}
-          .pcard:active{transform:scale(0.99);}
-          @keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        .paper-card {
+          background: var(--white);
+          border: 1.5px solid var(--border);
+          border-radius: 16px; overflow: hidden;
+          box-shadow: var(--shadow-sm);
+          transition: transform 0.15s;
+          -webkit-tap-highlight-color: transparent;
+        }
+        .paper-card:active { transform: scale(0.99); }
 
-          .pcard-head{padding:18px 20px 16px;border-bottom:1px solid var(--gb);background:rgba(255,255,255,0.025);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;}
-          .pcard-head::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 10%,rgba(192,132,252,0.5) 50%,transparent 90%);}
-          .pcard-blob{position:absolute;right:-20px;top:-20px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,rgba(168,85,247,0.18),transparent);pointer-events:none;}
+        /* Year accent bar */
+        .paper-top-bar {
+          background: var(--ink);
+          padding: 10px 16px;
+          display: flex; align-items: center;
+          justify-content: space-between;
+        }
+        .paper-year-text {
+          font-size: 13px; font-weight: 800;
+          color: #fff; letter-spacing: 0.06em;
+        }
+        .paper-tags { display: flex; gap: 6px; }
+        .tag {
+          font-size: 10px; font-weight: 700; padding: 3px 8px;
+          border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em;
+        }
+        .tag-qp { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.9); }
+        .tag-pdf { background: #16A34A; color: #fff; }
 
-          .year-block{display:flex;align-items:baseline;gap:6px;}
-          .year-big{font-family:'Syne',sans-serif;font-size:34px;font-weight:800;letter-spacing:-1px;line-height:1;background:linear-gradient(135deg,#E9D5FF,#C084FC,#818CF8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
-          .year-lbl{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:0.1em;}
+        .paper-body { padding: 14px 16px 16px; }
+        .paper-title {
+          font-size: 16px; font-weight: 700; line-height: 1.4;
+          color: var(--ink); letter-spacing: -0.2px;
+          margin-bottom: 14px;
+        }
 
-          .head-right{display:flex;align-items:center;gap:8px;}
-          .badge-row{display:flex;gap:6px;align-items:center;}
-          .badge{font-size:10px;font-weight:800;padding:5px 10px;border-radius:7px;text-transform:uppercase;letter-spacing:0.07em;}
-          .b-qp{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:var(--t2);}
-          .b-pdf{background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:var(--green);}
+        /* Buttons */
+        .actions { display: flex; gap: 8px; }
+        .btn {
+          flex: 1; padding: 12px 10px;
+          border-radius: 10px;
+          font-family: 'Inter', sans-serif;
+          font-size: 14px; font-weight: 700;
+          cursor: pointer; border: none;
+          text-decoration: none;
+          display: flex; align-items: center; justify-content: center; gap: 6px;
+          transition: all 0.15s; -webkit-tap-highlight-color: transparent;
+          letter-spacing: -0.1px;
+        }
+        .btn-view { background: #EEF3FF; color: var(--blue); }
+        .btn-view:active { background: #D8E4FF; transform: scale(0.97); }
+        .btn-download { background: #F0FDF4; color: var(--green); }
+        .btn-download:active { background: #DCFCE7; transform: scale(0.97); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
 
-          /* Bookmark button */
-          .bm-btn{
-            width:34px;height:34px;border-radius:10px;flex-shrink:0;
-            background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
-            display:flex;align-items:center;justify-content:center;
-            font-size:18px;cursor:pointer;transition:all 0.2s cubic-bezier(0.34,1.56,0.64,1);
-            -webkit-tap-highlight-color:transparent;
-          }
-          .bm-btn.saved{background:rgba(251,191,36,0.15);border-color:rgba(251,191,36,0.35);box-shadow:0 0 14px rgba(251,191,36,0.2);}
-          .bm-btn:active{transform:scale(0.82);}
+        .no-pdf {
+          font-size: 13px; color: var(--muted); text-align: center;
+          padding: 12px; background: var(--bg); border-radius: 10px;
+        }
 
-          .pcard-body{padding:16px 20px 18px;}
-          .paper-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;line-height:1.5;letter-spacing:-0.2px;margin-bottom:16px;color:rgba(255,255,255,0.9);}
+        /* Skeleton */
+        .skel {
+          background: linear-gradient(90deg, #ececf0 25%, #f5f5f8 50%, #ececf0 75%);
+          background-size: 200% 100%; animation: shimmer 1.4s infinite;
+          border-radius: 16px; height: 140px;
+        }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-          .actions{display:flex;gap:8px;}
-          .btn{flex:1;padding:13px 10px;border-radius:13px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all 0.2s cubic-bezier(0.34,1.56,0.64,1);text-decoration:none;-webkit-tap-highlight-color:transparent;}
-          .btn-view{background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.22);color:var(--blue);}
-          .btn-view:active{background:rgba(96,165,250,0.22);transform:scale(0.95);}
-          .btn-dl{background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.22);color:var(--green);}
-          .btn-dl:active{background:rgba(52,211,153,0.22);transform:scale(0.95);}
-          .btn:disabled{opacity:0.35;cursor:not-allowed;transform:none!important;}
+        .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+        .empty-icon { font-size: 52px; margin-bottom: 14px; display: block; }
+        .empty-title { font-size: 18px; font-weight: 700; color: var(--ink2); margin-bottom: 6px; }
+        .empty-sub { font-size: 14px; }
 
-          .no-pdf{font-size:13px;color:var(--t3);text-align:center;padding:14px;background:rgba(255,255,255,0.02);border-radius:12px;border:1px dashed rgba(255,255,255,0.1);}
+        .footer {
+          margin: 8px 16px 0; padding: 20px 16px;
+          background: var(--white); border-radius: 14px;
+          border: 1px solid var(--border);
+          display: flex; flex-direction: column; align-items: center; gap: 4px;
+        }
+        .footer-name { font-size: 13px; font-weight: 800; color: var(--red); }
+        .footer-sub { font-size: 11px; color: var(--muted); }
+      `}</style>
 
-          .skel{background:linear-gradient(90deg,rgba(255,255,255,0.03) 25%,rgba(255,255,255,0.07) 50%,rgba(255,255,255,0.03) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:22px;height:155px;border:1px solid var(--gb);}
-          @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-
-          .empty{text-align:center;padding:70px 20px;}
-          .empty-icon{font-size:56px;display:block;margin-bottom:16px;filter:drop-shadow(0 0 20px rgba(168,85,247,0.4));}
-          .empty-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--t2);margin-bottom:8px;}
-          .empty-sub{font-size:14px;color:var(--t3);}
-
-          .footer{margin:8px 20px 0;background:var(--g1);border:1px solid var(--gb);border-radius:20px;padding:18px 20px;display:flex;align-items:center;gap:14px;backdrop-filter:blur(16px);position:relative;overflow:hidden;}
-          .footer::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(192,132,252,0.4),transparent);}
-          .footer-logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#7C3AED,#4F46E5);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;box-shadow:0 4px 20px rgba(124,58,237,0.4);}
-          .footer-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--t1);}
-          .footer-sub{font-size:11px;color:var(--t2);margin-top:3px;}
-          .footer-heart{margin-left:auto;font-size:20px;animation:heartbeat 1.8s ease-in-out infinite;}
-          @keyframes heartbeat{0%,100%{transform:scale(1)}15%{transform:scale(1.3)}30%{transform:scale(1)}}
-
-          /* Toast */
-          .toast{
-            position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);
-            background:rgba(30,10,50,0.95);border:1px solid rgba(192,132,252,0.3);
-            backdrop-filter:blur(20px);border-radius:100px;
-            padding:10px 22px;font-family:'Outfit',sans-serif;
-            font-size:13px;font-weight:600;color:var(--t1);
-            white-space:nowrap;z-index:500;
-            opacity:0;transition:opacity 0.25s,transform 0.25s;
-            pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,0.4);
-          }
-          .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-        `}</style>
-
-        <div className="scene"><div className="o o1"/><div className="o o2"/></div>
-        <div className="grid-bg"/><div className="grain"/>
-
-        <div className={`toast ${toastMsg?"show":""}`}>{toastMsg}</div>
-
-        <div className="page">
-          <div className="topbar">
-            <div className="trow">
-              <Link to={-1} className="back">‹</Link>
-              <div className="tinfo">
-                <div className="title-row">
-                  <span className="ttitle">Papers</span>
-                  {!loading && <span className="count-chip">{papers.length}</span>}
-                </div>
-                <div className="tsub">{loading?"Loading…":`${filtered.length} paper${filtered.length!==1?"s":""} found`}</div>
-              </div>
+      <div className="topbar">
+        <div className="topbar-row">
+          <Link to={-1} className="back-btn">‹</Link>
+          <div className="topbar-info">
+            <div className="topbar-row2">
+              <span className="topbar-title">Papers</span>
+              {!loading && <span className="count-badge">{papers.length}</span>}
             </div>
-          </div>
-
-          <div className="search-wrap">
-            <div className="sbox">
-              <span className="s-ico">🔍</span>
-              <input className="s-in" placeholder="Search papers…" value={search} onChange={e=>setSearch(e.target.value)}/>
-              {search && <button className="s-clr" onClick={()=>setSearch("")}>✕</button>}
+            <div className="topbar-sub">
+              {loading ? "Loading..." : `${filtered.length} paper${filtered.length !== 1 ? "s" : ""} found`}
             </div>
-          </div>
-
-          {!loading && years.length>1 && (
-            <div className="year-row">
-              {years.map(y=>(
-                <button key={y} className={`ypill ${activeYear===y?"active":""}`} onClick={()=>setActiveYear(y)}>
-                  {y==="All"?"✦ All Years":y}
-                </button>
-              ))}
-            </div>
-          )}
-
-          <div className="sec-bar">
-            <span className="sec-title">{activeYear==="All"?"All Papers":`Year ${activeYear}`}</span>
-            {!loading && <span className="sec-count">{filtered.length} papers</span>}
-          </div>
-
-          <div className="papers">
-            {loading && Array(3).fill(0).map((_,i)=><div key={i} className="skel" style={{animationDelay:`${i*0.1}s`}}/>)}
-            {!loading && filtered.map((paper,i)=>(
-              <div key={paper.id} className="pcard" style={{animationDelay:`${i*0.07}s`}}>
-                <div className="pcard-head">
-                  <div className="pcard-blob"/>
-                  <div className="year-block">
-                    <span className="year-big">{paper.year}</span>
-                    <span className="year-lbl">Year</span>
-                  </div>
-                  <div className="head-right">
-                    <div className="badge-row">
-                      <span className="badge b-qp">Q·Paper</span>
-                      {paper.pdf && <span className="badge b-pdf">PDF ✓</span>}
-                    </div>
-                    <button
-                      className={`bm-btn ${isBookmarked(paper.id)?"saved":""}`}
-                      onClick={()=>toggleBookmark(paper)}
-                      title={isBookmarked(paper.id)?"Remove bookmark":"Save paper"}
-                    >
-                      {isBookmarked(paper.id) ? "⭐" : "☆"}
-                    </button>
-                  </div>
-                </div>
-                <div className="pcard-body">
-                  <div className="paper-title">{paper.title}</div>
-                  {paper.pdf ? (
-                    <div className="actions">
-                      <a href={paper.pdf} target="_blank" rel="noopener noreferrer" className="btn btn-view">👁 View PDF</a>
-                      <button onClick={()=>handleDownload(paper)} disabled={downloading===paper.id} className="btn btn-dl">
-                        {downloading===paper.id?"⏳ Saving…":"⬇ Download"}
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="no-pdf">📭 PDF not yet available</div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {!loading && filtered.length===0 && (
-            <div className="empty">
-              <span className="empty-icon">{search?"🔍":"📭"}</span>
-              <div className="empty-title">{search?"Nothing found":"No papers yet"}</div>
-              <div className="empty-sub">{search?`No results for "${search}"`:"Check back soon!"}</div>
-            </div>
-          )}
-
-          <div className="footer">
-            <div className="footer-logo">⭐</div>
-            <div><div className="footer-name">SFI KOTTAKKAL LC</div><div className="footer-sub">Made with love for students</div></div>
-            <div className="footer-heart">❤️</div>
           </div>
         </div>
       </div>
-      <BottomNav/>
-    </>
+
+      <div className="search-section">
+        <div className="search-box">
+          <span className="search-ico">🔍</span>
+          <input className="search-input" placeholder="Search papers..." value={search} onChange={e => setSearch(e.target.value)} />
+          {search && <button className="search-clear" onClick={() => setSearch("")}>✕</button>}
+        </div>
+      </div>
+
+      {!loading && years.length > 1 && (
+        <div className="year-row">
+          {years.map(y => (
+            <button key={y} className={`year-pill ${activeYear === y ? "active" : ""}`} onClick={() => setActiveYear(y)}>
+              {y === "All" ? "All Years" : y}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="section-label">
+        <span className="label-text">{activeYear === "All" ? "All Papers" : `Year ${activeYear}`}</span>
+        {!loading && <span className="label-count">{filtered.length}</span>}
+      </div>
+
+      <div className="papers">
+        {loading && Array(3).fill(0).map((_, i) => <div key={i} className="skel" />)}
+        {!loading && filtered.map(paper => (
+          <div key={paper.id} className="paper-card">
+            <div className="paper-top-bar">
+              <span className="paper-year-text">{paper.year}</span>
+              <div className="paper-tags">
+                <span className="tag tag-qp">Q. Paper</span>
+                {paper.pdf && <span className="tag tag-pdf">PDF</span>}
+              </div>
+            </div>
+            <div className="paper-body">
+              <div className="paper-title">{paper.title}</div>
+              {paper.pdf ? (
+                <div className="actions">
+                  <a href={paper.pdf} target="_blank" rel="noopener noreferrer" className="btn btn-view">
+                    👁 View
+                  </a>
+                  <button onClick={() => handleDownload(paper)} disabled={downloading === paper.id} className="btn btn-download">
+                    {downloading === paper.id ? "⏳ Downloading..." : "⬇ Download"}
+                  </button>
+                </div>
+              ) : (
+                <div className="no-pdf">📭 PDF not yet available</div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {!loading && filtered.length === 0 && (
+        <div className="empty">
+          <span className="empty-icon">{search ? "🔍" : "📭"}</span>
+          <div className="empty-title">{search ? "Nothing found" : "No papers yet"}</div>
+          <div className="empty-sub">{search ? `No results for "${search}"` : "Check back soon!"}</div>
+        </div>
+      )}
+
+      <div className="footer">
+        <div className="footer-name">★ SFI KOTTAKKAL LC</div>
+        <div className="footer-sub">Made with love for students</div>
+      </div>
+    </div>
   );
 }
+
+export default Papers;
