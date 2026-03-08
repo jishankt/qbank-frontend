@@ -4,138 +4,134 @@ import API from "../api";
 import SplashScreen from "./SplashScreen";
 import Confetti from "./Cofetti";
 
-const classEmoji = ["🎯","📐","🔬","🌍","📜","💡","🧬","🏛️","⚗️","🎨","🎭","🌿"];
+/* ── shared font + reset ── */
+const GLOBAL = `
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #F7F7F5;
+    --white: #FFFFFF;
+    --ink: #1A1A1A;
+    --ink2: #555555;
+    --ink3: #999999;
+    --ink4: #CCCCCC;
+    --line: #EDEDED;
+    --blue: #3B7CF4;
+    --blue-bg: #EBF1FE;
+    --green: #22C55E;
+    --green-bg: #DCFCE7;
+    --red: #EF4444;
+    --red-bg: #FEE2E2;
+    --radius: 16px;
+    --font: 'Nunito', sans-serif;
+  }
+  html, body {
+    background: var(--bg);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+  }
+`;
 
-const cardAccents = [
-  { light: "#EDE9FE", border: "#C4B5FD", text: "#7C3AED" },
-  { light: "#FCE7F3", border: "#F9A8D4", text: "#BE185D" },
-  { light: "#D1FAE5", border: "#6EE7B7", text: "#065F46" },
-  { light: "#DBEAFE", border: "#93C5FD", text: "#1D4ED8" },
-  { light: "#FEF3C7", border: "#FCD34D", text: "#92400E" },
-  { light: "#FFE4E6", border: "#FCA5A5", text: "#9F1239" },
-  { light: "#E0E7FF", border: "#A5B4FC", text: "#3730A3" },
-  { light: "#CCFBF1", border: "#5EEAD4", text: "#0F766E" },
-  { light: "#FEF9C3", border: "#FDE047", text: "#713F12" },
-  { light: "#F3E8FF", border: "#D8B4FE", text: "#7E22CE" },
-  { light: "#ECFDF5", border: "#A7F3D0", text: "#065F46" },
-  { light: "#FFF7ED", border: "#FED7AA", text: "#9A3412" },
+/* accent colors per class card */
+const ACCENTS = [
+  "#3B7CF4","#F45B3B","#22C55E","#F4A53B","#A53BF4",
+  "#3BF4C8","#F43B8C","#3BD4F4","#8CF43B","#F4E03B",
+  "#F43B3B","#3B9CF4",
 ];
+const EMOJIS = ["🎯","📐","🔬","🌍","📜","💡","🧬","🏛️","⚗️","🎨","🎭","🌿"];
 
-function formatCount(n) {
-  if (n === null || n === undefined) return "0";
-  const num = parseInt(n, 10);
-  if (isNaN(num)) return "0";
-  if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
-  if (num >= 1000) return (num / 1000).toFixed(1) + "K";
-  return num.toString();
+function fmt(n) {
+  if (!n && n !== 0) return "—";
+  const x = parseInt(n, 10);
+  if (isNaN(x)) return "—";
+  if (x >= 1000000) return (x/1000000).toFixed(1)+"M";
+  if (x >= 1000) return (x/1000).toFixed(1)+"K";
+  return x.toString();
 }
 
+/* ─────────────────────────────── BottomNav ─────────────────────────────── */
 export function BottomNav() {
-  const loc = useLocation();
-  const bookmarks = JSON.parse(localStorage.getItem("bookmarks") || "[]");
-  const active = (path) => loc.pathname === path;
+  const { pathname } = useLocation();
+  const saved = JSON.parse(localStorage.getItem("bookmarks") || "[]").length;
+  const active = p => pathname === p;
 
   return (
-    <nav className="bnav">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
-        .bnav {
-          position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
-          background: rgba(255,255,255,0.95);
-          backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-          border-top: 1px solid #F3F4F6;
-          display: flex; align-items: center;
-          padding: 8px 0 max(env(safe-area-inset-bottom), 12px);
-          box-shadow: 0 -4px 24px rgba(0,0,0,0.06);
-        }
-        .bnav-item {
-          flex: 1; display: flex; flex-direction: column;
-          align-items: center; gap: 3px;
-          text-decoration: none; padding: 6px 0;
-          -webkit-tap-highlight-color: transparent;
-          transition: transform 0.15s;
-          position: relative;
-        }
-        .bnav-item:active { transform: scale(0.88); }
-        .bnav-ico-wrap {
-          width: 36px; height: 36px; border-radius: 12px;
-          display: flex; align-items: center; justify-content: center;
-          transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1);
-        }
-        .bnav-item.active .bnav-ico-wrap {
-          background: #1C1C1E;
-        }
-        .bnav-ico {
-          font-size: 20px; line-height: 1;
-          filter: grayscale(0.6); opacity: 0.35;
-          transition: all 0.2s;
-        }
-        .bnav-item.active .bnav-ico {
-          filter: none; opacity: 1;
-        }
-        .bnav-lbl {
-          font-family: 'DM Sans', sans-serif;
-          font-size: 10px; font-weight: 600;
-          color: #9CA3AF; letter-spacing: 0.02em;
-          transition: color 0.2s;
-        }
-        .bnav-item.active .bnav-lbl { color: #1C1C1E; font-weight: 700; }
-        .bnav-badge {
-          position: absolute; top: 2px; right: calc(50% - 22px);
-          background: #EF4444; color: #fff;
-          font-family: 'DM Sans', sans-serif;
-          font-size: 9px; font-weight: 700;
-          min-width: 16px; height: 16px; border-radius: 100px;
-          display: flex; align-items: center; justify-content: center;
-          padding: 0 4px;
-          box-shadow: 0 2px 6px rgba(239,68,68,0.4);
-        }
-      `}</style>
-
+    <nav style={{
+      position:"fixed", bottom:0, left:0, right:0, zIndex:100,
+      background:"rgba(255,255,255,0.96)",
+      backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)",
+      borderTop:"1px solid var(--line)",
+      display:"flex",
+      paddingBottom:"max(env(safe-area-inset-bottom), 12px)",
+    }}>
       {[
-        { to: "/", icon: "🏠", label: "Home" },
-        { to: "/bookmarks", icon: "⭐", label: "Saved", badge: bookmarks.length },
-        { to: "/about", icon: "ℹ️", label: "About" },
+        { to:"/",          icon:"🏠", label:"Home"  },
+        { to:"/bookmarks", icon:"⭐", label:"Saved", badge: saved },
+        { to:"/about",     icon:"ℹ️", label:"About"  },
       ].map(({ to, icon, label, badge }) => (
-        <Link key={to} to={to} className={`bnav-item ${active(to) ? "active" : ""}`}>
-          <div className="bnav-ico-wrap">
-            <span className="bnav-ico">{icon}</span>
+        <Link key={to} to={to} style={{
+          flex:1, display:"flex", flexDirection:"column",
+          alignItems:"center", gap:3, padding:"10px 0",
+          textDecoration:"none", WebkitTapHighlightColor:"transparent",
+        }}>
+          <div style={{
+            width:40, height:40, borderRadius:12,
+            background: active(to) ? "var(--ink)" : "transparent",
+            display:"flex", alignItems:"center", justifyContent:"center",
+            fontSize:20, position:"relative",
+            transition:"background 0.2s",
+          }}>
+            {icon}
+            {badge > 0 && (
+              <span style={{
+                position:"absolute", top:2, right:2,
+                background:"var(--red)", color:"#fff",
+                fontSize:9, fontWeight:800,
+                minWidth:16, height:16, borderRadius:100,
+                display:"flex", alignItems:"center", justifyContent:"center",
+                padding:"0 4px", fontFamily:"var(--font)",
+              }}>{badge > 9 ? "9+" : badge}</span>
+            )}
           </div>
-          <span className="bnav-lbl">{label}</span>
-          {badge > 0 && <div className="bnav-badge">{badge > 9 ? "9+" : badge}</div>}
+          <span style={{
+            fontFamily:"var(--font)", fontSize:11, fontWeight: active(to) ? 700 : 500,
+            color: active(to) ? "var(--ink)" : "var(--ink3)",
+          }}>{label}</span>
         </Link>
       ))}
     </nav>
   );
 }
 
+/* ─────────────────────────────── Classes ─────────────────────────────── */
 export default function Classes() {
-  const [classes, setClasses] = useState([]);
-  const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [visitors, setVisitors] = useState(null);
-  const [totalPapers, setTotalPapers] = useState(null);
-  const [showSplash, setShowSplash] = useState(() => !sessionStorage.getItem("splashDone"));
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [classes, setClasses]       = useState([]);
+  const [search, setSearch]         = useState("");
+  const [loading, setLoading]       = useState(true);
+  const [visitors, setVisitors]     = useState(null);
+  const [papers, setPapers]         = useState(null);
+  const [splash, setSplash]         = useState(() => !sessionStorage.getItem("splashDone"));
+  const [confetti, setConfetti]     = useState(false);
 
   useEffect(() => {
-    API.get("classes/").then(r => setClasses(r.data)).catch(() => {}).finally(() => setLoading(false));
-    API.get("papers/count/").then(r => setTotalPapers(r.data.count)).catch(() => setTotalPapers("?"));
+    API.get("classes/").then(r=>setClasses(r.data)).catch(()=>{}).finally(()=>setLoading(false));
+    API.get("papers/count/").then(r=>setPapers(r.data.count)).catch(()=>setPapers("?"));
     const seen = sessionStorage.getItem("visited");
     if (!seen) {
-      sessionStorage.setItem("visited", "1");
-      API.post("visitors/increment/").then(r => setVisitors(r.data.count)).catch(() => setVisitors(0));
+      sessionStorage.setItem("visited","1");
+      API.post("visitors/increment/").then(r=>setVisitors(r.data.count)).catch(()=>setVisitors(0));
     } else {
-      API.get("visitors/").then(r => setVisitors(r.data.count)).catch(() => setVisitors(0));
+      API.get("visitors/").then(r=>setVisitors(r.data.count)).catch(()=>setVisitors(0));
     }
   }, []);
 
-  const handleSplashDone = () => {
-    sessionStorage.setItem("splashDone", "1");
-    setShowSplash(false);
+  const onSplashDone = () => {
+    sessionStorage.setItem("splashDone","1");
+    setSplash(false);
     if (!localStorage.getItem("confettiShown")) {
-      localStorage.setItem("confettiShown", "1");
-      setShowConfetti(true);
+      localStorage.setItem("confettiShown","1");
+      setConfetti(true);
     }
   };
 
@@ -143,392 +139,243 @@ export default function Classes() {
 
   return (
     <>
-      {showSplash && <SplashScreen onDone={handleSplashDone} />}
-      {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
+      {splash   && <SplashScreen onDone={onSplashDone} />}
+      {confetti && <Confetti onDone={() => setConfetti(false)} />}
 
-      <div className="root">
-        <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap');
-          *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-          :root {
-            --bg: #FAFAF8;
-            --surface: #FFFFFF;
-            --border: #F0F0EE;
-            --border2: #E5E5E3;
-            --t1: #1C1C1E;
-            --t2: #6B7280;
-            --t3: #9CA3AF;
-            --t4: #D1D5DB;
-          }
-
-          html, body { background: var(--bg); -webkit-font-smoothing: antialiased; overscroll-behavior: none; }
-
-          .root {
-            min-height: 100vh; min-height: 100dvh;
-            background: var(--bg);
-            font-family: 'DM Sans', sans-serif; color: var(--t1);
-            overflow-x: hidden;
-            padding-bottom: calc(max(env(safe-area-inset-bottom), 14px) + 72px);
-          }
-
-          /* Soft background texture */
-          .bg-texture {
-            position: fixed; inset: 0; z-index: 0; pointer-events: none;
-            background-image: radial-gradient(circle, #E5E7EB 1px, transparent 1px);
-            background-size: 32px 32px; opacity: 0.5;
-          }
-          .bg-glow1 {
-            position: fixed; top: -120px; right: -120px;
-            width: 400px; height: 400px; border-radius: 50%;
-            background: radial-gradient(circle, rgba(99,102,241,0.07), transparent 70%);
-            pointer-events: none; z-index: 0;
-          }
-          .bg-glow2 {
-            position: fixed; bottom: -100px; left: -80px;
-            width: 360px; height: 360px; border-radius: 50%;
-            background: radial-gradient(circle, rgba(236,72,153,0.05), transparent 70%);
-            pointer-events: none; z-index: 0;
-          }
-
-          .page { position: relative; z-index: 2; animation: pageIn 0.4s ease both; }
-          @keyframes pageIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
-
-          /* Header */
-          .header {
-            background: rgba(250,250,248,0.92);
-            border-bottom: 1px solid var(--border);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            padding: max(env(safe-area-inset-top), 52px) 20px 20px;
-            position: sticky; top: 0; z-index: 20;
-          }
-
-          .brand-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
-
-          .brand-pill {
-            display: inline-flex; align-items: center; gap: 8px;
-            background: #1C1C1E; border-radius: 100px;
-            padding: 6px 14px 6px 8px;
-          }
-          .brand-cube {
-            width: 22px; height: 22px; border-radius: 7px;
-            background: linear-gradient(135deg, #6366F1, #8B5CF6);
-            display: flex; align-items: center; justify-content: center;
-            font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 700; color: #fff;
-          }
-          .brand-text { font-size: 11px; font-weight: 600; color: #fff; letter-spacing: 0.08em; text-transform: uppercase; }
-
-          .notif-btn {
-            width: 38px; height: 38px; border-radius: 12px;
-            background: var(--surface); border: 1px solid var(--border2);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px; cursor: pointer; position: relative;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-            -webkit-tap-highlight-color: transparent;
-          }
-          .notif-dot {
-            position: absolute; top: 8px; right: 9px;
-            width: 6px; height: 6px; border-radius: 50%;
-            background: #EF4444;
-            box-shadow: 0 0 0 2px var(--bg);
-            animation: blink 2.5s ease-in-out infinite;
-          }
-          @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
-
-          .hero-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 38px; font-weight: 800;
-            letter-spacing: -1px; line-height: 1.05; margin-bottom: 6px;
-            color: var(--t1);
-          }
-          .hero-title em { font-style: normal; color: #6366F1; }
-          .hero-sub { font-size: 14px; color: var(--t2); font-weight: 400; }
-
-          /* Sponsor strip */
-          .sponsor-wrap { padding: 16px 20px 0; }
-          .sponsor {
-            background: var(--surface); border: 1px solid var(--border2);
-            border-radius: 18px; padding: 14px 16px;
-            display: flex; align-items: center; gap: 12px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
-          }
-          .spon-icon {
-            width: 42px; height: 42px; border-radius: 13px;
-            background: #1C1C1E;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px; flex-shrink: 0;
-          }
-          .spon-by { font-size: 10px; font-weight: 500; color: var(--t3); text-transform: uppercase; letter-spacing: 0.1em; }
-          .spon-name { font-size: 14px; font-weight: 700; color: var(--t1); margin-top: 2px; }
-          .spon-chip {
-            margin-left: auto; background: #F3F4F6; border: 1px solid var(--border2);
-            border-radius: 100px; padding: 5px 12px;
-            font-size: 10px; font-weight: 700; color: var(--t2);
-            letter-spacing: 0.06em; text-transform: uppercase; flex-shrink: 0;
-          }
-
-          /* Stats */
-          .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 14px 20px 0; }
-          .stat {
-            background: var(--surface); border: 1px solid var(--border2);
-            border-radius: 16px; padding: 14px 8px;
-            text-align: center;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-            animation: fadeUp 0.5s ease both;
-          }
-          .stat:nth-child(1){animation-delay:0.1s} .stat:nth-child(2){animation-delay:0.18s}
-          .stat:nth-child(3){animation-delay:0.26s} .stat:nth-child(4){animation-delay:0.34s}
-          @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-          .stat-n { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--t1); margin-bottom: 3px; }
-          .stat-k { font-size: 9px; font-weight: 600; color: var(--t3); text-transform: uppercase; letter-spacing: 0.12em; }
-
-          /* Visitor card */
-          .vis-wrap { padding: 12px 20px 0; }
-          .vis-card {
-            background: #1C1C1E; border-radius: 20px; padding: 20px;
-            display: flex; align-items: center; gap: 16px;
-            position: relative; overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.14);
-            animation: fadeUp 0.5s ease 0.4s both;
-          }
-          .vis-card-glow {
-            position: absolute; right: -40px; top: -40px;
-            width: 160px; height: 160px; border-radius: 50%;
-            background: radial-gradient(circle, rgba(99,102,241,0.25), transparent);
-            pointer-events: none;
-          }
-          .vis-icon {
-            width: 52px; height: 52px; border-radius: 16px; flex-shrink: 0;
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
-            display: flex; align-items: center; justify-content: center; font-size: 26px;
-          }
-          .vis-n { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 800; line-height: 1; color: #fff; }
-          .vis-lbl { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 3px; }
-          .live-pill {
-            margin-left: auto; display: flex; align-items: center; gap: 6px;
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
-            padding: 7px 14px; border-radius: 100px;
-            font-size: 11px; font-weight: 700; color: #6EE7B7; flex-shrink: 0;
-          }
-          .live-dot {
-            width: 6px; height: 6px; border-radius: 50%;
-            background: #10B981;
-            animation: livePulse 1.6s ease-in-out infinite;
-          }
-          @keyframes livePulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.7);opacity:0.4}}
-
-          .vis-skel {
-            height: 94px; border-radius: 20px;
-            background: linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%);
-            background-size: 200% 100%; animation: shimmer 1.5s infinite;
-            border: 1px solid var(--border);
-          }
-
-          /* Search */
-          .search-wrap { padding: 14px 20px 0; }
-          .sbox {
-            display: flex; align-items: center; gap: 10px;
-            background: var(--surface); border: 1.5px solid var(--border2);
-            border-radius: 16px; padding: 0 16px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-            transition: border-color 0.2s, box-shadow 0.2s;
-          }
-          .sbox:focus-within {
-            border-color: #6366F1;
-            box-shadow: 0 0 0 4px rgba(99,102,241,0.08);
-          }
-          .s-ico { font-size: 15px; opacity: 0.3; flex-shrink: 0; }
-          .s-in {
-            flex: 1; border: none; outline: none;
-            padding: 14px 0; font-family: 'DM Sans', sans-serif;
-            font-size: 15px; color: var(--t1); background: transparent;
-          }
-          .s-in::placeholder { color: var(--t4); }
-          .s-clr {
-            background: #F3F4F6; border: 1px solid var(--border2);
-            color: var(--t2); width: 22px; height: 22px; border-radius: 6px;
-            font-size: 11px; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; -webkit-tap-highlight-color: transparent;
-          }
-
-          /* Section bar */
-          .sec-bar { display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 12px; }
-          .sec-title {
-            font-size: 11px; font-weight: 700; color: var(--t3);
-            text-transform: uppercase; letter-spacing: 0.14em;
-          }
-          .sec-count {
-            font-size: 12px; font-weight: 700; color: #6366F1;
-            background: #EEF2FF; border: 1px solid #C7D2FE;
-            padding: 3px 10px; border-radius: 100px;
-          }
-
-          /* Grid */
-          .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 20px 20px; }
-
-          .cls-card {
-            background: var(--surface); border: 1.5px solid var(--border2);
-            border-radius: 22px; padding: 18px;
-            text-decoration: none; color: var(--t1);
-            display: flex; flex-direction: column; gap: 14px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            position: relative; overflow: hidden;
-            transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s;
-            -webkit-tap-highlight-color: transparent;
-            animation: cardIn 0.4s ease both;
-          }
-          .cls-card::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-            background: var(--card-accent, #6366F1); border-radius: 22px 22px 0 0;
-          }
-          .cls-card:active { transform: scale(0.95); box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-          @keyframes cardIn{from{opacity:0;transform:scale(0.95) translateY(6px)}to{opacity:1;transform:scale(1) translateY(0)}}
-
-          .cls-top { display: flex; align-items: flex-start; justify-content: space-between; }
-          .cls-emoji-wrap {
-            width: 46px; height: 46px; border-radius: 14px;
-            background: var(--card-light, #EEF2FF);
-            border: 1px solid var(--card-border, #C7D2FE);
-            display: flex; align-items: center; justify-content: center; font-size: 22px;
-          }
-          .cls-num { font-size: 10px; font-weight: 700; color: var(--t4); letter-spacing: 0.1em; margin-top: 4px; }
-          .cls-name {
-            font-family: 'Playfair Display', serif;
-            font-size: 16px; font-weight: 700; letter-spacing: -0.2px; line-height: 1.25;
-            color: var(--t1);
-          }
-          .cls-hint { font-size: 11px; color: var(--t3); margin-top: 3px; }
-          .cls-foot { display: flex; align-items: center; justify-content: space-between; }
-          .cls-open { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--t4); }
-          .cls-arrow {
-            width: 28px; height: 28px; border-radius: 9px;
-            background: #F9FAFB; border: 1px solid var(--border2);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 14px; color: var(--t2);
-          }
-
+      <div style={{ minHeight:"100dvh", background:"var(--bg)", paddingBottom:"calc(max(env(safe-area-inset-bottom),14px) + 72px)" }}>
+        <style>{GLOBAL}{`
+          .page { animation: fadeUp 0.35s ease both; }
+          @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+          .card-in { animation: cardIn 0.3s ease both; }
+          @keyframes cardIn { from{opacity:0;transform:scale(0.96)} to{opacity:1;transform:scale(1)} }
           .skel {
-            background: linear-gradient(90deg, #F9FAFB 25%, #F3F4F6 50%, #F9FAFB 75%);
-            background-size: 200% 100%; animation: shimmer 1.5s infinite;
-            border-radius: 22px; height: 145px; border: 1px solid var(--border);
+            background: linear-gradient(90deg,#F0F0EE 25%,#E8E8E6 50%,#F0F0EE 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+            border-radius: var(--radius);
           }
           @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-
-          .empty { text-align: center; padding: 70px 20px; }
-          .empty-icon { font-size: 52px; display: block; margin-bottom: 16px; }
-          .empty-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--t2); margin-bottom: 8px; }
-          .empty-sub { font-size: 14px; color: var(--t3); }
-
-          .footer {
-            margin: 8px 20px 0; background: var(--surface);
-            border: 1px solid var(--border2); border-radius: 20px; padding: 18px 20px;
-            display: flex; align-items: center; gap: 14px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-          }
-          .footer-logo {
-            width: 42px; height: 42px; border-radius: 13px; background: #1C1C1E;
-            display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
-          }
-          .footer-name { font-size: 13px; font-weight: 700; color: var(--t1); }
-          .footer-sub { font-size: 11px; color: var(--t3); margin-top: 2px; }
-          .footer-heart { margin-left: auto; font-size: 18px; animation: heartbeat 2s ease-in-out infinite; }
-          @keyframes heartbeat{0%,100%{transform:scale(1)}15%{transform:scale(1.3)}30%{transform:scale(1)}}
+          input { outline: none; }
+          a { -webkit-tap-highlight-color: transparent; }
+          button { -webkit-tap-highlight-color: transparent; }
         `}</style>
 
-        <div className="bg-texture" />
-        <div className="bg-glow1" />
-        <div className="bg-glow2" />
+        {/* ── Header ── */}
+        <div style={{
+          background:"rgba(247,247,245,0.94)", borderBottom:"1px solid var(--line)",
+          backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)",
+          padding:"max(env(safe-area-inset-top),48px) 20px 18px",
+          position:"sticky", top:0, zIndex:20,
+        }}>
+          {/* Brand row */}
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
+            <div style={{
+              display:"inline-flex", alignItems:"center", gap:7,
+              background:"var(--ink)", borderRadius:100, padding:"5px 14px 5px 7px",
+            }}>
+              <div style={{
+                width:22, height:22, borderRadius:8, background:"var(--blue)",
+                display:"flex", alignItems:"center", justifyContent:"center",
+                fontSize:11, fontWeight:800, color:"#fff", fontFamily:"var(--font)",
+              }}>Q</div>
+              <span style={{ fontSize:11, fontWeight:700, color:"#fff", letterSpacing:"0.08em", textTransform:"uppercase", fontFamily:"var(--font)" }}>
+                Question Bank
+              </span>
+            </div>
+            <div style={{
+              width:38, height:38, borderRadius:12, background:"var(--white)",
+              border:"1px solid var(--line)", display:"flex", alignItems:"center",
+              justifyContent:"center", fontSize:18, boxShadow:"0 1px 4px rgba(0,0,0,0.06)",
+              position:"relative", cursor:"pointer",
+            }}>
+              🔔
+              <span style={{
+                position:"absolute", top:7, right:8,
+                width:6, height:6, borderRadius:"50%", background:"var(--red)",
+                boxShadow:"0 0 0 2px var(--bg)",
+              }} />
+            </div>
+          </div>
+
+          {/* Title */}
+          <div style={{ fontFamily:"var(--font)", fontSize:32, fontWeight:900, color:"var(--ink)", letterSpacing:"-0.8px", lineHeight:1.1, marginBottom:4 }}>
+            Find your<br />
+            <span style={{ color:"var(--blue)" }}>Papers.</span>
+          </div>
+          <div style={{ fontFamily:"var(--font)", fontSize:14, fontWeight:500, color:"var(--ink3)" }}>
+            Model questions · Always free
+          </div>
+        </div>
 
         <div className="page">
-          <div className="header">
-            <div className="brand-row">
-              <div className="brand-pill">
-                <div className="brand-cube">Q</div>
-                <span className="brand-text">Question Bank</span>
-              </div>
-              <div className="notif-btn">🔔<div className="notif-dot" /></div>
-            </div>
-            <div className="hero-title">Find your<br /><em>Papers.</em></div>
-            <div className="hero-sub">Model questions · Always free · Always yours</div>
-          </div>
-
-          <div className="sponsor-wrap">
-            <div className="sponsor">
-              <div className="spon-icon">⭐</div>
+          {/* Sponsor strip */}
+          <div style={{ padding:"14px 20px 0" }}>
+            <div style={{
+              background:"var(--white)", border:"1px solid var(--line)",
+              borderRadius:var_r(14), padding:"12px 16px",
+              display:"flex", alignItems:"center", gap:12,
+              boxShadow:"0 1px 6px rgba(0,0,0,0.04)",
+            }}>
+              <div style={{
+                width:40, height:40, borderRadius:12, background:"#FEF3C7",
+                display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, flexShrink:0,
+              }}>⭐</div>
               <div>
-                <div className="spon-by">Official Sponsor</div>
-                <div className="spon-name">SFI KOTTAKKAL LC</div>
+                <div style={{ fontFamily:"var(--font)", fontSize:10, fontWeight:600, color:"var(--ink3)", textTransform:"uppercase", letterSpacing:"0.1em" }}>Official Sponsor</div>
+                <div style={{ fontFamily:"var(--font)", fontSize:14, fontWeight:800, color:"var(--ink)", marginTop:2 }}>SFI Kottakkal LC</div>
               </div>
-              <div className="spon-chip">Official</div>
+              <div style={{
+                marginLeft:"auto", background:"var(--bg)", border:"1px solid var(--line)",
+                borderRadius:100, padding:"4px 12px",
+                fontFamily:"var(--font)", fontSize:10, fontWeight:700, color:"var(--ink3)",
+                textTransform:"uppercase", letterSpacing:"0.06em", flexShrink:0,
+              }}>Official</div>
             </div>
           </div>
 
-          <div className="stats">
+          {/* Stats row */}
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8, padding:"12px 20px 0" }}>
             {[
-              { v: loading ? "—" : classes.length, k: "Classes" },
-              { v: totalPapers ?? "—", k: "Papers" },
-              { v: visitors !== null ? formatCount(visitors) : "—", k: "Visitors" },
-              { v: "Free", k: "Always" },
+              { v: loading?"—":classes.length, k:"Classes" },
+              { v: papers??"—", k:"Papers" },
+              { v: visitors!==null?fmt(visitors):"—", k:"Visitors" },
+              { v: "Free", k:"Always" },
             ].map(({ v, k }) => (
-              <div className="stat" key={k}>
-                <div className="stat-n">{v}</div>
-                <div className="stat-k">{k}</div>
+              <div key={k} style={{
+                background:"var(--white)", border:"1px solid var(--line)",
+                borderRadius:14, padding:"14px 6px", textAlign:"center",
+                boxShadow:"0 1px 4px rgba(0,0,0,0.04)",
+              }}>
+                <div style={{ fontFamily:"var(--font)", fontSize:18, fontWeight:900, color:"var(--ink)", marginBottom:3 }}>{v}</div>
+                <div style={{ fontFamily:"var(--font)", fontSize:9, fontWeight:700, color:"var(--ink3)", textTransform:"uppercase", letterSpacing:"0.12em" }}>{k}</div>
               </div>
             ))}
           </div>
 
-          <div className="vis-wrap">
-            {visitors === null ? <div className="vis-skel" /> : (
-              <div className="vis-card">
-                <div className="vis-card-glow" />
-                <div className="vis-icon">👥</div>
+          {/* Live visitors banner */}
+          <div style={{ padding:"10px 20px 0" }}>
+            {visitors === null ? (
+              <div className="skel" style={{ height:80 }} />
+            ) : (
+              <div style={{
+                background:"var(--ink)", borderRadius:var_r(16), padding:"18px 20px",
+                display:"flex", alignItems:"center", gap:14,
+                boxShadow:"0 4px 20px rgba(0,0,0,0.12)",
+              }}>
+                <div style={{
+                  width:48, height:48, borderRadius:14, background:"rgba(255,255,255,0.1)",
+                  display:"flex", alignItems:"center", justifyContent:"center", fontSize:24, flexShrink:0,
+                }}>👥</div>
                 <div>
-                  <div className="vis-n">{formatCount(visitors)}</div>
-                  <div className="vis-lbl">Total Visitors</div>
+                  <div style={{ fontFamily:"var(--font)", fontSize:28, fontWeight:900, color:"#fff", lineHeight:1 }}>{fmt(visitors)}</div>
+                  <div style={{ fontFamily:"var(--font)", fontSize:12, fontWeight:500, color:"rgba(255,255,255,0.5)", marginTop:3 }}>Total Visitors</div>
                 </div>
-                <div className="live-pill"><div className="live-dot" />Live</div>
+                <div style={{
+                  marginLeft:"auto", display:"flex", alignItems:"center", gap:6,
+                  background:"rgba(255,255,255,0.1)", border:"1px solid rgba(255,255,255,0.12)",
+                  borderRadius:100, padding:"6px 14px", flexShrink:0,
+                }}>
+                  <span style={{
+                    width:7, height:7, borderRadius:"50%", background:"#4ADE80",
+                    display:"inline-block", boxShadow:"0 0 8px #4ADE80",
+                    animation:"pulse 1.6s ease-in-out infinite",
+                  }} />
+                  <span style={{ fontFamily:"var(--font)", fontSize:11, fontWeight:700, color:"#4ADE80" }}>Live</span>
+                </div>
+                <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
               </div>
             )}
           </div>
 
-          <div className="search-wrap">
-            <div className="sbox">
-              <span className="s-ico">🔍</span>
-              <input className="s-in" placeholder="Search classes…" value={search} onChange={e => setSearch(e.target.value)} />
-              {search && <button className="s-clr" onClick={() => setSearch("")}>✕</button>}
+          {/* Search */}
+          <div style={{ padding:"14px 20px 0" }}>
+            <div style={{
+              display:"flex", alignItems:"center", gap:10,
+              background:"var(--white)", border:"1.5px solid var(--line)",
+              borderRadius:14, padding:"0 16px",
+              boxShadow:"0 1px 4px rgba(0,0,0,0.04)",
+            }}>
+              <span style={{ fontSize:16, opacity:0.3 }}>🔍</span>
+              <input
+                style={{ flex:1, border:"none", padding:"13px 0", fontFamily:"var(--font)", fontSize:15, fontWeight:500, color:"var(--ink)", background:"transparent" }}
+                placeholder="Search classes…"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  style={{ width:22, height:22, borderRadius:6, background:"var(--bg)", border:"1px solid var(--line)", fontSize:11, color:"var(--ink3)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
+                >✕</button>
+              )}
             </div>
           </div>
 
-          <div className="sec-bar">
-            <span className="sec-title">All Classes</span>
-            {!loading && <span className="sec-count">{filtered.length}</span>}
+          {/* Section label */}
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"18px 20px 12px" }}>
+            <span style={{ fontFamily:"var(--font)", fontSize:11, fontWeight:700, color:"var(--ink3)", textTransform:"uppercase", letterSpacing:"0.14em" }}>All Classes</span>
+            {!loading && (
+              <span style={{ fontFamily:"var(--font)", fontSize:12, fontWeight:700, color:"var(--blue)", background:"var(--blue-bg)", borderRadius:100, padding:"3px 10px" }}>
+                {filtered.length}
+              </span>
+            )}
           </div>
 
-          <div className="grid">
-            {loading && Array(6).fill(0).map((_, i) => (
-              <div key={i} className="skel" style={{ animationDelay: `${i * 0.08}s` }} />
+          {/* Classes grid */}
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:10, padding:"0 20px 20px" }}>
+            {loading && Array(6).fill(0).map((_,i) => (
+              <div key={i} className="skel" style={{ height:140, animationDelay:`${i*0.07}s` }} />
             ))}
+
             {!loading && filtered.map((cls, i) => {
-              const acc = cardAccents[i % cardAccents.length];
+              const color = ACCENTS[i % ACCENTS.length];
               return (
-                <Link key={cls.id} to={`/subjects/${cls.id}`} className="cls-card"
+                <Link
+                  key={cls.id}
+                  to={`/subjects/${cls.id}`}
+                  className="card-in"
                   style={{
-                    '--card-accent': acc.text,
-                    '--card-light': acc.light,
-                    '--card-border': acc.border,
-                    animationDelay: `${0.05 * i}s`
-                  }}>
-                  <div className="cls-top">
-                    <div className="cls-emoji-wrap">{classEmoji[i % classEmoji.length]}</div>
-                    <span className="cls-num">{String(i + 1).padStart(2, "0")}</span>
+                    background:"var(--white)", border:"1px solid var(--line)",
+                    borderRadius:var_r(18), padding:18,
+                    textDecoration:"none", color:"var(--ink)",
+                    display:"flex", flexDirection:"column", gap:12,
+                    boxShadow:"0 2px 10px rgba(0,0,0,0.05)",
+                    animationDelay:`${i*0.04}s`,
+                    borderTop:`3px solid ${color}`,
+                  }}
+                  onMouseDown={e => e.currentTarget.style.transform="scale(0.97)"}
+                  onMouseUp={e => e.currentTarget.style.transform="scale(1)"}
+                  onTouchStart={e => e.currentTarget.style.transform="scale(0.97)"}
+                  onTouchEnd={e => e.currentTarget.style.transform="scale(1)"}
+                >
+                  <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between" }}>
+                    <div style={{
+                      width:44, height:44, borderRadius:13,
+                      background:`${color}18`,
+                      display:"flex", alignItems:"center", justifyContent:"center", fontSize:22,
+                    }}>
+                      {EMOJIS[i % EMOJIS.length]}
+                    </div>
+                    <span style={{ fontFamily:"var(--font)", fontSize:10, fontWeight:700, color:"var(--ink4)" }}>
+                      {String(i+1).padStart(2,"0")}
+                    </span>
                   </div>
                   <div>
-                    <div className="cls-name">Class {cls.name}</div>
-                    <div className="cls-hint">Tap to explore</div>
+                    <div style={{ fontFamily:"var(--font)", fontSize:16, fontWeight:800, color:"var(--ink)", letterSpacing:"-0.2px" }}>
+                      Class {cls.name}
+                    </div>
+                    <div style={{ fontFamily:"var(--font)", fontSize:11, fontWeight:500, color:"var(--ink3)", marginTop:3 }}>
+                      Tap to explore
+                    </div>
                   </div>
-                  <div className="cls-foot">
-                    <span className="cls-open">Open</span>
-                    <div className="cls-arrow">→</div>
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                    <span style={{ fontFamily:"var(--font)", fontSize:10, fontWeight:700, color:"var(--ink4)", textTransform:"uppercase", letterSpacing:"0.12em" }}>Open</span>
+                    <div style={{
+                      width:28, height:28, borderRadius:9,
+                      background:"var(--bg)", border:"1px solid var(--line)",
+                      display:"flex", alignItems:"center", justifyContent:"center",
+                      fontSize:14, color:"var(--ink3)",
+                    }}>→</div>
                   </div>
                 </Link>
               );
@@ -536,25 +383,32 @@ export default function Classes() {
           </div>
 
           {!loading && filtered.length === 0 && (
-            <div className="empty">
-              <span className="empty-icon">🔍</span>
-              <div className="empty-title">Nothing found</div>
-              <div className="empty-sub">No classes match "{search}"</div>
+            <div style={{ textAlign:"center", padding:"60px 20px" }}>
+              <div style={{ fontSize:48, marginBottom:14 }}>🔍</div>
+              <div style={{ fontFamily:"var(--font)", fontSize:18, fontWeight:800, color:"var(--ink2)", marginBottom:6 }}>Nothing found</div>
+              <div style={{ fontFamily:"var(--font)", fontSize:14, fontWeight:500, color:"var(--ink3)" }}>No classes match "{search}"</div>
             </div>
           )}
 
-          <div className="footer">
-            <div className="footer-logo">⭐</div>
+          {/* Footer */}
+          <div style={{
+            margin:"4px 20px 0", background:"var(--white)", border:"1px solid var(--line)",
+            borderRadius:16, padding:"16px 18px", display:"flex", alignItems:"center", gap:12,
+          }}>
+            <div style={{ width:40, height:40, borderRadius:12, background:"var(--ink)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, flexShrink:0 }}>⭐</div>
             <div>
-              <div className="footer-name">SFI KOTTAKKAL LC</div>
-              <div className="footer-sub">Made with love for students</div>
+              <div style={{ fontFamily:"var(--font)", fontSize:13, fontWeight:800, color:"var(--ink)" }}>SFI Kottakkal LC</div>
+              <div style={{ fontFamily:"var(--font)", fontSize:11, fontWeight:500, color:"var(--ink3)", marginTop:2 }}>Made with love for students</div>
             </div>
-            <div className="footer-heart">❤️</div>
+            <span style={{ marginLeft:"auto", fontSize:18, animation:"hb 2s ease-in-out infinite" }}>❤️</span>
+            <style>{`@keyframes hb{0%,100%{transform:scale(1)}15%{transform:scale(1.3)}30%{transform:scale(1)}}`}</style>
           </div>
         </div>
       </div>
-
       <BottomNav />
     </>
   );
 }
+
+/* helper — CSS var shorthand (avoids JSX lint issues) */
+function var_r(px) { return `${px}px`; }

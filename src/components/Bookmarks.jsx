@@ -2,160 +2,175 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { BottomNav } from "./Classes";
 
+const GLOBAL = `
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  :root {
+    --bg:#F7F7F5; --white:#FFFFFF; --ink:#1A1A1A; --ink2:#555555;
+    --ink3:#999999; --ink4:#CCCCCC; --line:#EDEDED;
+    --blue:#3B7CF4; --blue-bg:#EBF1FE;
+    --green:#22C55E; --green-bg:#DCFCE7;
+    --red:#EF4444; --red-bg:#FEE2E2;
+    --font:'Nunito',sans-serif;
+  }
+  html,body { background:var(--bg); font-family:var(--font); -webkit-font-smoothing:antialiased; overscroll-behavior:none; }
+  a { -webkit-tap-highlight-color:transparent; }
+  button { -webkit-tap-highlight-color:transparent; }
+`;
+
 export default function Bookmarks() {
-  const [bookmarks, setBookmarks] = useState(() => JSON.parse(localStorage.getItem("bookmarks") || "[]"));
-  const [downloading, setDownloading] = useState(null);
-  const [toastMsg, setToastMsg] = useState("");
+  const [bookmarks, setBm] = useState(() => JSON.parse(localStorage.getItem("bookmarks")||"[]"));
+  const [downloading, setDown] = useState(null);
+  const [toast, setToast] = useState("");
 
-  const showToast = (msg) => {
-    setToastMsg(msg);
-    setTimeout(() => setToastMsg(""), 2200);
+  const showToast = msg => { setToast(msg); setTimeout(()=>setToast(""),2000); };
+
+  const remove = id => {
+    const next = bookmarks.filter(b=>b.id!==id);
+    setBm(next); localStorage.setItem("bookmarks", JSON.stringify(next));
+    showToast("Removed");
   };
 
-  const remove = (id) => {
-    const next = bookmarks.filter(b => b.id !== id);
-    setBookmarks(next);
-    localStorage.setItem("bookmarks", JSON.stringify(next));
-    showToast("Removed from saved");
-  };
-
-  const handleDownload = async (paper) => {
+  const download = async (paper) => {
     if (!paper.pdf) return;
-    setDownloading(paper.id);
+    setDown(paper.id);
     try {
       const r = await fetch(paper.pdf);
       if (!r.ok) throw new Error();
       const blob = await r.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url; a.download = `${paper.title}_${paper.year}.pdf`;
+      a.href=url; a.download=`${paper.title}_${paper.year}.pdf`;
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      setTimeout(()=>URL.revokeObjectURL(url),5000);
       showToast("Download started ⬇");
     } catch { alert("Download failed."); }
-    finally { setDownloading(null); }
+    finally { setDown(null); }
   };
 
   return (
     <>
-      <div className="root">
-        <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap');
-          *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
-          :root { --bg:#FAFAF8; --surface:#FFFFFF; --border:#F0F0EE; --border2:#E5E5E3; --t1:#1C1C1E; --t2:#6B7280; --t3:#9CA3AF; --t4:#D1D5DB; }
-          html,body { background:var(--bg); -webkit-font-smoothing:antialiased; overscroll-behavior:none; }
-          .root { min-height:100vh; min-height:100dvh; background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--t1); overflow-x:hidden; padding-bottom:calc(max(env(safe-area-inset-bottom),14px) + 72px); }
-
-          .bg-texture { position:fixed; inset:0; z-index:0; pointer-events:none; background-image:radial-gradient(circle,#E5E7EB 1px,transparent 1px); background-size:32px 32px; opacity:0.5; }
-          .page { position:relative; z-index:2; animation:pageIn 0.4s ease both; }
-          @keyframes pageIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
-
-          .topbar { background:rgba(250,250,248,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); padding:max(env(safe-area-inset-top),52px) 20px 24px; position:sticky; top:0; z-index:20; }
-          .brand-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
-          .brand-pill { display:inline-flex; align-items:center; gap:8px; background:#1C1C1E; border-radius:100px; padding:6px 14px 6px 8px; }
-          .brand-cube { width:22px; height:22px; border-radius:7px; background:linear-gradient(135deg,#6366F1,#8B5CF6); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; }
-          .brand-text { font-size:11px; font-weight:600; color:#fff; letter-spacing:0.08em; text-transform:uppercase; }
-          .page-title { font-family:'Playfair Display',serif; font-size:34px; font-weight:800; letter-spacing:-0.8px; line-height:1.1; margin-bottom:6px; color:var(--t1); }
-          .page-title em { font-style:normal; color:#6366F1; }
-          .page-sub { font-size:14px; color:var(--t2); }
-
-          .count-banner { margin:14px 20px 0; background:var(--surface); border:1.5px solid var(--border2); border-radius:18px; padding:14px 18px; display:flex; align-items:center; gap:12px; box-shadow:0 2px 10px rgba(0,0,0,0.05); }
-          .count-icon { font-size:26px; }
-          .count-val { font-family:'Playfair Display',serif; font-size:22px; font-weight:800; color:var(--t1); }
-          .count-lbl { font-size:12px; color:var(--t3); margin-top:2px; }
-          .clear-btn { margin-left:auto; background:#FEF2F2; border:1.5px solid #FECACA; border-radius:10px; padding:8px 14px; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:700; color:#B91C1C; cursor:pointer; -webkit-tap-highlight-color:transparent; transition:all 0.2s; }
-          .clear-btn:active { background:#FEE2E2; transform:scale(0.95); }
-
-          .sec-bar { display:flex; align-items:center; justify-content:space-between; padding:18px 20px 12px; }
-          .sec-title { font-size:11px; font-weight:700; color:var(--t3); text-transform:uppercase; letter-spacing:0.14em; }
-
-          .list { padding:0 20px 20px; display:flex; flex-direction:column; gap:10px; }
-
-          .bm-card { background:var(--surface); border:1.5px solid var(--border2); border-radius:22px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.05); animation:cardIn 0.35s ease both; }
+      <div style={{ minHeight:"100dvh", background:"var(--bg)", paddingBottom:"calc(max(env(safe-area-inset-bottom),14px) + 72px)" }}>
+        <style>{GLOBAL}{`
+          .page { animation:fadeUp 0.3s ease both; }
+          @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+          .card { animation:cardIn 0.3s ease both; }
           @keyframes cardIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-
-          .bm-head { padding:14px 18px; border-bottom:1px solid var(--border); background:#F9FAFB; display:flex; align-items:center; justify-content:space-between; }
-          .bm-year { font-family:'Playfair Display',serif; font-size:28px; font-weight:800; color:var(--t1); }
-          .bm-year-lbl { font-size:10px; font-weight:600; color:var(--t3); text-transform:uppercase; letter-spacing:0.1em; margin-left:6px; }
-          .del-btn { width:32px; height:32px; border-radius:9px; background:#FEF2F2; border:1.5px solid #FECACA; display:flex; align-items:center; justify-content:center; font-size:14px; cursor:pointer; -webkit-tap-highlight-color:transparent; transition:all 0.2s; color:#B91C1C; }
-          .del-btn:active { background:#FEE2E2; transform:scale(0.88); }
-
-          .bm-body { padding:14px 18px 16px; }
-          .bm-title { font-family:'Playfair Display',serif; font-size:15px; font-weight:700; line-height:1.5; margin-bottom:14px; color:var(--t1); }
-          .actions { display:flex; gap:8px; }
-          .btn { flex:1; padding:12px 10px; border-radius:13px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:all 0.2s; text-decoration:none; -webkit-tap-highlight-color:transparent; }
-          .btn-view { background:#EFF6FF; border:1.5px solid #BFDBFE; color:#1D4ED8; }
-          .btn-view:active { background:#DBEAFE; transform:scale(0.96); }
-          .btn-dl { background:#ECFDF5; border:1.5px solid #A7F3D0; color:#065F46; }
-          .btn-dl:active { background:#D1FAE5; transform:scale(0.96); }
+          .btn { flex:1; padding:12px 10px; border-radius:12px; font-family:var(--font); font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; text-decoration:none; transition:all 0.18s; border:1.5px solid; }
+          .btn:active { transform:scale(0.96); }
           .btn:disabled { opacity:0.4; cursor:not-allowed; transform:none!important; }
-
-          .empty { text-align:center; padding:80px 20px; }
-          .empty-icon { font-size:68px; display:block; margin-bottom:20px; }
-          .empty-title { font-family:'Playfair Display',serif; font-size:22px; font-weight:800; color:var(--t2); margin-bottom:8px; }
-          .empty-sub { font-size:14px; color:var(--t3); margin-bottom:28px; }
-          .go-home { display:inline-flex; align-items:center; gap:8px; background:#1C1C1E; border:none; border-radius:14px; padding:13px 24px; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:700; color:#fff; text-decoration:none; cursor:pointer; box-shadow:0 4px 18px rgba(0,0,0,0.14); -webkit-tap-highlight-color:transparent; transition:transform 0.2s; }
-          .go-home:active { transform:scale(0.96); }
-
-          .toast { position:fixed; bottom:90px; left:50%; transform:translateX(-50%) translateY(16px); background:#1C1C1E; border-radius:100px; padding:10px 22px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; color:#fff; white-space:nowrap; z-index:500; opacity:0; transition:opacity 0.25s, transform 0.25s; pointer-events:none; box-shadow:0 8px 24px rgba(0,0,0,0.18); }
-          .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
         `}</style>
 
-        <div className="bg-texture" />
-        <div className={`toast ${toastMsg ? "show" : ""}`}>{toastMsg}</div>
+        {/* Toast */}
+        <div style={{
+          position:"fixed", bottom:88, left:"50%", transform:`translateX(-50%) translateY(${toast?0:16}px)`,
+          background:"var(--ink)", borderRadius:100, padding:"10px 22px",
+          fontFamily:"var(--font)", fontSize:13, fontWeight:700, color:"#fff",
+          whiteSpace:"nowrap", zIndex:500, opacity:toast?1:0,
+          transition:"opacity 0.22s, transform 0.22s", pointerEvents:"none",
+          boxShadow:"0 6px 20px rgba(0,0,0,0.15)",
+        }}>{toast}</div>
+
+        {/* Top bar */}
+        <div style={{
+          background:"rgba(247,247,245,0.94)", borderBottom:"1px solid var(--line)",
+          backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)",
+          padding:"max(env(safe-area-inset-top),48px) 20px 22px",
+          position:"sticky", top:0, zIndex:20,
+        }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
+            <div style={{ display:"inline-flex", alignItems:"center", gap:7, background:"var(--ink)", borderRadius:100, padding:"5px 14px 5px 7px" }}>
+              <div style={{ width:22, height:22, borderRadius:8, background:"var(--blue)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:800, color:"#fff", fontFamily:"var(--font)" }}>Q</div>
+              <span style={{ fontSize:11, fontWeight:700, color:"#fff", letterSpacing:"0.08em", textTransform:"uppercase", fontFamily:"var(--font)" }}>Question Bank</span>
+            </div>
+          </div>
+          <div style={{ fontFamily:"var(--font)", fontSize:30, fontWeight:900, color:"var(--ink)", letterSpacing:"-0.7px", lineHeight:1.1, marginBottom:5 }}>
+            Saved <span style={{ color:"var(--blue)" }}>Papers</span>
+          </div>
+          <div style={{ fontFamily:"var(--font)", fontSize:14, fontWeight:500, color:"var(--ink3)" }}>
+            Your bookmarked papers in one place
+          </div>
+        </div>
 
         <div className="page">
-          <div className="topbar">
-            <div className="brand-row">
-              <div className="brand-pill">
-                <div className="brand-cube">Q</div>
-                <span className="brand-text">Question Bank</span>
-              </div>
-            </div>
-            <div className="page-title">Your <em>Saved</em><br />Papers.</div>
-            <div className="page-sub">All your bookmarked papers in one place</div>
-          </div>
-
+          {/* Count banner */}
           {bookmarks.length > 0 && (
-            <div className="count-banner">
-              <span className="count-icon">⭐</span>
-              <div>
-                <div className="count-val">{bookmarks.length}</div>
-                <div className="count-lbl">Saved Paper{bookmarks.length !== 1 ? "s" : ""}</div>
-              </div>
-              <button className="clear-btn" onClick={() => {
-                setBookmarks([]); localStorage.removeItem("bookmarks"); showToast("All cleared");
-              }}>Clear All</button>
-            </div>
-          )}
-
-          {bookmarks.length > 0 && (
-            <div className="sec-bar">
-              <span className="sec-title">Saved Papers</span>
-            </div>
-          )}
-
-          <div className="list">
-            {bookmarks.map((paper, i) => (
-              <div key={paper.id} className="bm-card" style={{ animationDelay: `${i * 0.07}s` }}>
-                <div className="bm-head">
-                  <div>
-                    <span className="bm-year">{paper.year}</span>
-                    <span className="bm-year-lbl">Year</span>
+            <div style={{ padding:"14px 20px 0" }}>
+              <div style={{
+                background:"var(--white)", border:"1px solid var(--line)",
+                borderRadius:14, padding:"14px 18px", display:"flex", alignItems:"center", gap:12,
+                boxShadow:"0 1px 6px rgba(0,0,0,0.04)",
+              }}>
+                <span style={{ fontSize:26 }}>⭐</span>
+                <div>
+                  <div style={{ fontFamily:"var(--font)", fontSize:22, fontWeight:900, color:"var(--ink)" }}>{bookmarks.length}</div>
+                  <div style={{ fontFamily:"var(--font)", fontSize:12, fontWeight:500, color:"var(--ink3)", marginTop:1 }}>
+                    Saved Paper{bookmarks.length!==1?"s":""}
                   </div>
-                  <button className="del-btn" onClick={() => remove(paper.id)} title="Remove">✕</button>
                 </div>
-                <div className="bm-body">
-                  <div className="bm-title">{paper.title}</div>
+                <button
+                  onClick={()=>{ setBm([]); localStorage.removeItem("bookmarks"); showToast("All cleared"); }}
+                  style={{
+                    marginLeft:"auto", background:"var(--red-bg)", border:"1.5px solid #FECACA",
+                    borderRadius:10, padding:"8px 14px", fontFamily:"var(--font)",
+                    fontSize:12, fontWeight:700, color:"#B91C1C", cursor:"pointer",
+                  }}
+                >Clear All</button>
+              </div>
+            </div>
+          )}
+
+          {bookmarks.length > 0 && (
+            <div style={{ padding:"16px 20px 10px" }}>
+              <span style={{ fontFamily:"var(--font)", fontSize:11, fontWeight:700, color:"var(--ink3)", textTransform:"uppercase", letterSpacing:"0.14em" }}>Saved Papers</span>
+            </div>
+          )}
+
+          {/* List */}
+          <div style={{ padding:"0 20px 20px", display:"flex", flexDirection:"column", gap:10 }}>
+            {bookmarks.map((paper, i) => (
+              <div key={paper.id} className="card" style={{
+                background:"var(--white)", border:"1px solid var(--line)",
+                borderRadius:16, overflow:"hidden",
+                boxShadow:"0 2px 10px rgba(0,0,0,0.05)",
+                animationDelay:`${i*0.06}s`,
+              }}>
+                <div style={{ padding:"12px 18px", borderBottom:"1px solid var(--line)", background:"#FAFAF8", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                  <div>
+                    <span style={{ fontFamily:"var(--font)", fontSize:26, fontWeight:900, color:"var(--ink)", letterSpacing:"-0.8px" }}>{paper.year}</span>
+                    <span style={{ fontFamily:"var(--font)", fontSize:10, fontWeight:600, color:"var(--ink3)", textTransform:"uppercase", letterSpacing:"0.1em", marginLeft:6 }}>Year</span>
+                  </div>
+                  <button
+                    onClick={()=>remove(paper.id)}
+                    style={{
+                      width:32, height:32, borderRadius:9, background:"var(--red-bg)",
+                      border:"1.5px solid #FECACA", fontSize:13, cursor:"pointer",
+                      display:"flex", alignItems:"center", justifyContent:"center", color:"#B91C1C",
+                      transition:"transform 0.15s",
+                    }}
+                    onTouchStart={e=>e.currentTarget.style.transform="scale(0.88)"}
+                    onTouchEnd={e=>e.currentTarget.style.transform="scale(1)"}
+                  >✕</button>
+                </div>
+                <div style={{ padding:"14px 18px 16px" }}>
+                  <div style={{ fontFamily:"var(--font)", fontSize:15, fontWeight:700, color:"var(--ink)", lineHeight:1.5, marginBottom:14 }}>{paper.title}</div>
                   {paper.pdf ? (
-                    <div className="actions">
-                      <a href={paper.pdf} target="_blank" rel="noopener noreferrer" className="btn btn-view">👁 View PDF</a>
-                      <button onClick={() => handleDownload(paper)} disabled={downloading === paper.id} className="btn btn-dl">
-                        {downloading === paper.id ? "⏳ Saving…" : "⬇ Download"}
+                    <div style={{ display:"flex", gap:8 }}>
+                      <a href={paper.pdf} target="_blank" rel="noopener noreferrer"
+                        className="btn"
+                        style={{ color:"var(--blue)", borderColor:"#BFDBFE", background:"var(--blue-bg)" }}>
+                        👁 View
+                      </a>
+                      <button
+                        onClick={()=>download(paper)}
+                        disabled={downloading===paper.id}
+                        className="btn"
+                        style={{ color:"#15803D", borderColor:"#86EFAC", background:"var(--green-bg)" }}>
+                        {downloading===paper.id?"⏳ Saving…":"⬇ Download"}
                       </button>
                     </div>
                   ) : (
-                    <div style={{ fontSize: "13px", color: "var(--t3)", padding: "12px", textAlign: "center", background: "#F9FAFB", borderRadius: "10px", border: "1px dashed var(--border2)" }}>
+                    <div style={{ fontFamily:"var(--font)", fontSize:13, fontWeight:500, color:"var(--ink3)", textAlign:"center", padding:12, background:"var(--bg)", borderRadius:10, border:"1px dashed var(--line)" }}>
                       📭 PDF not available
                     </div>
                   )}
@@ -164,12 +179,20 @@ export default function Bookmarks() {
             ))}
           </div>
 
+          {/* Empty state */}
           {bookmarks.length === 0 && (
-            <div className="empty">
-              <span className="empty-icon">⭐</span>
-              <div className="empty-title">No saved papers yet</div>
-              <div className="empty-sub">Tap ☆ on any paper to save it here</div>
-              <Link to="/" className="go-home">🏠 Browse Papers</Link>
+            <div style={{ textAlign:"center", padding:"80px 20px" }}>
+              <div style={{ fontSize:64, marginBottom:18 }}>⭐</div>
+              <div style={{ fontFamily:"var(--font)", fontSize:20, fontWeight:800, color:"var(--ink2)", marginBottom:8 }}>No saved papers yet</div>
+              <div style={{ fontFamily:"var(--font)", fontSize:14, fontWeight:500, color:"var(--ink3)", marginBottom:28 }}>
+                Tap ☆ on any paper to save it here
+              </div>
+              <Link to="/" style={{
+                display:"inline-flex", alignItems:"center", gap:8,
+                background:"var(--ink)", borderRadius:14, padding:"13px 24px",
+                fontFamily:"var(--font)", fontSize:14, fontWeight:700, color:"#fff",
+                textDecoration:"none", boxShadow:"0 4px 16px rgba(0,0,0,0.12)",
+              }}>🏠 Browse Papers</Link>
             </div>
           )}
         </div>
