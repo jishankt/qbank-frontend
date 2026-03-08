@@ -2,7 +2,12 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import API from "../api";
 
-const classIcons = ["🎯","🔬","📐","🌍","🎨","📜","💡","🧬","🏛️","⚗️","🎭","🌿"];
+const classColors = [
+  "#FF6B6B","#FF9F43","#FECA57","#48DBFB",
+  "#FF9FF3","#54A0FF","#5F27CD","#00D2D3",
+  "#1DD1A1","#C8D6E5","#EE5A24","#0652DD"
+];
+const classEmoji = ["🎯","📐","🔬","🌍","📜","💡","🧬","🏛️","⚗️","🎨","🎭","🌿"];
 
 function Classes() {
   const [classes, setClasses] = useState([]);
@@ -21,313 +26,241 @@ function Classes() {
   );
 
   return (
-    <div className="qb-root">
+    <div className="app">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-          --bg: #080b14;
-          --surface: #0e1420;
-          --card: #131929;
-          --border: rgba(255,255,255,0.06);
-          --border-hover: rgba(139,92,246,0.5);
-          --accent: #7c3aed;
-          --accent2: #06b6d4;
-          --accent3: #f59e0b;
-          --text: #f0f4ff;
-          --muted: #6b7a99;
-          --glow: rgba(124,58,237,0.3);
+          --bg: #F2F2F7;
+          --surface: #FFFFFF;
+          --surface2: #F2F2F7;
+          --ink: #1C1C1E;
+          --ink2: #3A3A3C;
+          --muted: #8E8E93;
+          --border: rgba(0,0,0,0.06);
+          --blue: #007AFF;
+          --shadow: 0 2px 12px rgba(0,0,0,0.06);
+          --shadow-lg: 0 8px 32px rgba(0,0,0,0.1);
         }
 
-        .qb-root {
+        body { background: var(--bg); }
+
+        .app {
           min-height: 100vh;
+          min-height: 100dvh;
           background: var(--bg);
-          font-family: 'DM Sans', sans-serif;
-          color: var(--text);
-          padding: 0 16px 60px;
-          position: relative;
-          overflow-x: hidden;
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          color: var(--ink);
+          padding-bottom: env(safe-area-inset-bottom, 24px);
         }
 
-        /* Ambient background orbs */
-        .qb-root::before {
-          content: '';
-          position: fixed;
-          top: -200px; left: -200px;
-          width: 600px; height: 600px;
-          background: radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%);
-          pointer-events: none;
-          z-index: 0;
+        /* Hero header */
+        .hero {
+          background: var(--surface);
+          padding: 60px 20px 28px;
+          border-bottom: 1px solid var(--border);
         }
-        .qb-root::after {
-          content: '';
-          position: fixed;
-          bottom: -200px; right: -200px;
-          width: 500px; height: 500px;
-          background: radial-gradient(circle, rgba(6,182,212,0.08) 0%, transparent 70%);
-          pointer-events: none;
-          z-index: 0;
+        .hero-tag {
+          display: inline-flex; align-items: center; gap: 6px;
+          background: rgba(0,122,255,0.1);
+          color: var(--blue);
+          font-size: 12px; font-weight: 700;
+          letter-spacing: 0.06em; text-transform: uppercase;
+          padding: 4px 12px; border-radius: 100px;
+          margin-bottom: 14px;
+        }
+        .hero h1 {
+          font-size: 34px; font-weight: 800;
+          letter-spacing: -0.8px; line-height: 1.1;
+          color: var(--ink); margin-bottom: 6px;
+        }
+        .hero p {
+          font-size: 15px; color: var(--muted); font-weight: 400;
         }
 
-        .qb-inner { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; }
-
-        /* Hero */
-        .qb-hero {
-          padding: 52px 0 36px;
-          text-align: center;
+        /* Stats row */
+        .stats {
+          display: flex; gap: 0;
+          margin: 0 20px;
+          background: var(--surface);
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: var(--shadow);
+          margin-top: 16px;
         }
-        .qb-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          background: rgba(124,58,237,0.15);
-          border: 1px solid rgba(124,58,237,0.3);
-          border-radius: 100px;
-          padding: 5px 14px;
-          font-size: 12px;
-          font-weight: 500;
-          color: #a78bfa;
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
-          margin-bottom: 20px;
+        .stat {
+          flex: 1; padding: 14px 12px; text-align: center;
+          border-right: 1px solid var(--border);
         }
-        .qb-hero h1 {
-          font-family: 'Syne', sans-serif;
-          font-size: clamp(32px, 8vw, 52px);
-          font-weight: 800;
-          line-height: 1.1;
-          letter-spacing: -1px;
-          background: linear-gradient(135deg, #f0f4ff 0%, #a78bfa 50%, #06b6d4 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-          margin-bottom: 10px;
+        .stat:last-child { border-right: none; }
+        .stat-num {
+          font-size: 20px; font-weight: 800;
+          color: var(--blue); line-height: 1;
+          margin-bottom: 3px;
         }
-        .qb-hero p {
-          color: var(--muted);
-          font-size: 15px;
-          font-weight: 300;
+        .stat-label {
+          font-size: 11px; font-weight: 600;
+          color: var(--muted); text-transform: uppercase;
+          letter-spacing: 0.06em;
         }
 
         /* Search */
-        .qb-search-wrap {
+        .search-wrap {
+          padding: 16px 20px 8px;
           position: relative;
-          margin-bottom: 32px;
         }
-        .qb-search-icon {
-          position: absolute;
-          left: 16px; top: 50%;
+        .search-icon {
+          position: absolute; left: 34px; top: 50%;
           transform: translateY(-50%);
+          font-size: 15px; pointer-events: none;
           color: var(--muted);
-          font-size: 16px;
-          pointer-events: none;
         }
-        .qb-search {
+        .search {
           width: 100%;
-          background: var(--card);
-          border: 1px solid var(--border);
-          border-radius: 14px;
-          padding: 14px 16px 14px 44px;
-          color: var(--text);
-          font-family: 'DM Sans', sans-serif;
-          font-size: 15px;
-          outline: none;
-          transition: border-color 0.2s, box-shadow 0.2s;
+          background: var(--surface);
+          border: none; border-radius: 12px;
+          padding: 12px 16px 12px 40px;
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-size: 15px; color: var(--ink);
+          outline: none; box-shadow: var(--shadow);
+          -webkit-appearance: none;
         }
-        .qb-search::placeholder { color: var(--muted); }
-        .qb-search:focus {
-          border-color: rgba(124,58,237,0.5);
-          box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
-        }
+        .search::placeholder { color: var(--muted); }
+        .search:focus { box-shadow: 0 0 0 3px rgba(0,122,255,0.15), var(--shadow); }
 
-        /* Section label */
-        .qb-label {
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          color: var(--muted);
-          margin-bottom: 14px;
+        /* Section */
+        .section-label {
+          padding: 16px 20px 10px;
+          font-size: 13px; font-weight: 700;
+          color: var(--muted); text-transform: uppercase;
+          letter-spacing: 0.07em;
         }
 
         /* Grid */
-        .qb-grid {
+        .grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
           gap: 12px;
-        }
-        @media (min-width: 420px) {
-          .qb-grid { grid-template-columns: repeat(3, 1fr); }
+          padding: 0 20px 20px;
         }
 
-        /* Class card */
-        .qb-card {
-          background: var(--card);
-          border: 1px solid var(--border);
-          border-radius: 16px;
-          padding: 20px 14px;
-          text-decoration: none;
-          color: var(--text);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 10px;
-          transition: all 0.25s ease;
-          position: relative;
-          overflow: hidden;
+        .cls-card {
+          background: var(--surface);
+          border-radius: 20px;
+          padding: 18px 16px 16px;
+          text-decoration: none; color: var(--ink);
+          display: flex; flex-direction: column; gap: 10px;
+          box-shadow: var(--shadow);
+          transition: transform 0.15s, box-shadow 0.15s;
+          -webkit-tap-highlight-color: transparent;
+          position: relative; overflow: hidden;
         }
-        .qb-card::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(135deg, rgba(124,58,237,0.0), rgba(124,58,237,0.08));
-          opacity: 0;
-          transition: opacity 0.25s;
-        }
-        .qb-card:hover {
-          border-color: var(--border-hover);
-          transform: translateY(-4px);
-          box-shadow: 0 12px 32px rgba(124,58,237,0.2);
-        }
-        .qb-card:hover::before { opacity: 1; }
-        .qb-card:active { transform: scale(0.97); }
+        .cls-card:active { transform: scale(0.96); box-shadow: var(--shadow); }
 
-        .qb-card-icon {
-          font-size: 28px;
-          line-height: 1;
-          filter: drop-shadow(0 2px 8px rgba(124,58,237,0.4));
+        .cls-icon-wrap {
+          width: 46px; height: 46px; border-radius: 14px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 22px;
         }
-        .qb-card-label {
-          font-family: 'Syne', sans-serif;
-          font-size: 13px;
-          font-weight: 700;
-          text-align: center;
-          letter-spacing: 0.02em;
+        .cls-name {
+          font-size: 15px; font-weight: 700; color: var(--ink);
+          line-height: 1.2;
         }
-        .qb-card-sub {
-          font-size: 11px;
-          color: var(--muted);
+        .cls-sub {
+          font-size: 12px; color: var(--muted); font-weight: 500;
+          margin-top: -4px;
         }
-
-        /* Empty */
-        .qb-empty {
-          text-align: center;
-          padding: 48px 0;
-          color: var(--muted);
+        .cls-arrow {
+          position: absolute; right: 14px; top: 14px;
+          font-size: 12px; color: var(--muted);
         }
-        .qb-empty-icon { font-size: 40px; margin-bottom: 12px; }
 
         /* Skeleton */
-        .qb-skeleton {
-          background: linear-gradient(90deg, var(--card) 25%, #1a2235 50%, var(--card) 75%);
+        .skeleton {
+          background: linear-gradient(90deg, #E5E5EA 25%, #F2F2F7 50%, #E5E5EA 75%);
           background-size: 200% 100%;
           animation: shimmer 1.4s infinite;
-          border-radius: 16px;
-          height: 96px;
+          border-radius: 20px; height: 110px;
         }
         @keyframes shimmer {
           0% { background-position: 200% 0; }
           100% { background-position: -200% 0; }
         }
 
-        /* Stats bar */
-        .qb-stats {
-          display: flex;
-          gap: 20px;
-          justify-content: center;
-          margin-bottom: 28px;
-          flex-wrap: wrap;
+        .empty {
+          text-align: center; padding: 48px 20px; color: var(--muted);
         }
-        .qb-stat {
-          text-align: center;
-        }
-        .qb-stat-num {
-          font-family: 'Syne', sans-serif;
-          font-size: 22px;
-          font-weight: 800;
-          background: linear-gradient(135deg, #a78bfa, #06b6d4);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
-        .qb-stat-label {
-          font-size: 11px;
-          color: var(--muted);
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-        }
-        .qb-divider {
-          width: 1px; height: 32px;
-          background: var(--border);
-          align-self: center;
-        }
+        .empty-icon { font-size: 44px; margin-bottom: 12px; }
+        .empty p { font-size: 15px; font-weight: 500; }
       `}</style>
 
-      <div className="qb-inner">
-        {/* Hero */}
-        <div className="qb-hero">
-          <div className="qb-badge">📚 Question Bank</div>
-          <h1>Find Your Papers</h1>
-          <p>Model papers, organized by class & subject</p>
-        </div>
-
-        {/* Stats */}
-        {!loading && classes.length > 0 && (
-          <div className="qb-stats">
-            <div className="qb-stat">
-              <div className="qb-stat-num">{classes.length}</div>
-              <div className="qb-stat-label">Classes</div>
-            </div>
-            <div className="qb-divider" />
-            <div className="qb-stat">
-              <div className="qb-stat-num">∞</div>
-              <div className="qb-stat-label">Papers</div>
-            </div>
-            <div className="qb-divider" />
-            <div className="qb-stat">
-              <div className="qb-stat-num">Free</div>
-              <div className="qb-stat-label">Always</div>
-            </div>
-          </div>
-        )}
-
-        {/* Search */}
-        <div className="qb-search-wrap">
-          <span className="qb-search-icon">🔍</span>
-          <input
-            className="qb-search"
-            placeholder="Search classes..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-        </div>
-
-        <div className="qb-label">All Classes</div>
-
-        {/* Grid */}
-        <div className="qb-grid">
-          {loading && Array(6).fill(0).map((_, i) => (
-            <div key={i} className="qb-skeleton" />
-          ))}
-
-          {!loading && filtered.map((cls, i) => (
-            <Link key={cls.id} to={`/subjects/${cls.id}`} className="qb-card">
-              <div className="qb-card-icon">{classIcons[i % classIcons.length]}</div>
-              <div className="qb-card-label">Class {cls.name}</div>
-              <div className="qb-card-sub">View subjects →</div>
-            </Link>
-          ))}
-        </div>
-
-        {!loading && filtered.length === 0 && (
-          <div className="qb-empty">
-            <div className="qb-empty-icon">🔍</div>
-            <p>No classes match "{search}"</p>
-          </div>
-        )}
+      {/* Hero */}
+      <div className="hero">
+        <div className="hero-tag">📚 Question Bank</div>
+        <h1>Find Your<br />Papers</h1>
+        <p>Model papers by class & subject</p>
       </div>
+
+      {/* Stats */}
+      {!loading && classes.length > 0 && (
+        <div className="stats">
+          <div className="stat">
+            <div className="stat-num">{classes.length}</div>
+            <div className="stat-label">Classes</div>
+          </div>
+          <div className="stat">
+            <div className="stat-num">∞</div>
+            <div className="stat-label">Papers</div>
+          </div>
+          <div className="stat">
+            <div className="stat-num">Free</div>
+            <div className="stat-label">Always</div>
+          </div>
+        </div>
+      )}
+
+      {/* Search */}
+      <div className="search-wrap">
+        <span className="search-icon">🔍</span>
+        <input
+          className="search"
+          placeholder="Search classes..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+      </div>
+
+      <div className="section-label">All Classes</div>
+
+      <div className="grid">
+        {loading && Array(6).fill(0).map((_, i) => (
+          <div key={i} className="skeleton" />
+        ))}
+        {!loading && filtered.map((cls, i) => {
+          const color = classColors[i % classColors.length];
+          return (
+            <Link key={cls.id} to={`/subjects/${cls.id}`} className="cls-card">
+              <span className="cls-arrow">›</span>
+              <div className="cls-icon-wrap" style={{ background: color + "22" }}>
+                <span style={{ fontSize: 22 }}>{classEmoji[i % classEmoji.length]}</span>
+              </div>
+              <div>
+                <div className="cls-name">Class {cls.name}</div>
+                <div className="cls-sub">View subjects</div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
+      {!loading && filtered.length === 0 && (
+        <div className="empty">
+          <div className="empty-icon">🔍</div>
+          <p>No classes match "{search}"</p>
+        </div>
+      )}
     </div>
   );
 }
