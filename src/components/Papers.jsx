@@ -49,291 +49,270 @@ function Papers() {
   };
 
   return (
-    <div className="app">
+    <div className="root">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
-          --bg: #050508; --card: #0F0F18; --card2: #141420;
-          --neon: #00FF87; --neon2: #00D4FF; --pink: #FF3CAC;
-          --text: #FFFFFF; --text2: #B0B0C8; --muted: #505068;
-          --border: rgba(255,255,255,0.06); --border2: rgba(0,255,135,0.2);
+          --bg: #F7F7F8; --white: #FFFFFF; --ink: #111118;
+          --ink2: #3D3D4A; --muted: #9898A8; --border: #E8E8EE;
+          --red: #E63946; --green: #16A34A; --blue: #2D6BE4;
+          --shadow-sm: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
         }
-        body { background: var(--bg); }
-        .app {
-          min-height: 100vh; min-height: 100dvh; background: var(--bg);
-          font-family: 'Barlow', sans-serif; color: var(--text);
-          padding-bottom: env(safe-area-inset-bottom, 40px);
-          position: relative; overflow-x: hidden;
+        html, body { background: var(--bg); }
+        .root {
+          min-height: 100vh; min-height: 100dvh;
+          background: var(--bg);
+          font-family: 'Inter', -apple-system, sans-serif;
+          color: var(--ink);
+          padding-bottom: max(env(safe-area-inset-bottom), 32px);
+          -webkit-font-smoothing: antialiased;
         }
-        .app::before {
-          content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-          background: radial-gradient(ellipse 80% 40% at 50% -10%, rgba(0,255,135,0.06) 0%, transparent 60%);
-          pointer-events: none; z-index: 0;
-        }
-        .inner { position: relative; z-index: 1; }
 
         /* Topbar */
-        .topbar { padding: 52px 20px 24px; }
-        .topbar-row { display: flex; align-items: center; gap: 14px; }
+        .topbar {
+          background: var(--white);
+          padding: max(env(safe-area-inset-top), 52px) 20px 18px;
+          border-bottom: 1px solid var(--border);
+          position: sticky; top: 0; z-index: 10;
+        }
+        .topbar-row { display: flex; align-items: center; gap: 12px; }
         .back-btn {
-          width: 42px; height: 42px; border-radius: 12px;
-          background: var(--card); border: 1px solid var(--border);
+          width: 40px; height: 40px; border-radius: 12px;
+          background: var(--bg); border: 1.5px solid var(--border);
           display: flex; align-items: center; justify-content: center;
-          font-size: 20px; color: var(--neon);
+          font-size: 20px; color: var(--ink2);
           text-decoration: none; flex-shrink: 0;
-          -webkit-tap-highlight-color: transparent; transition: opacity 0.15s;
+          -webkit-tap-highlight-color: transparent; transition: background 0.15s;
         }
-        .back-btn:active { opacity: 0.6; }
+        .back-btn:active { background: var(--border); }
         .topbar-info { flex: 1; min-width: 0; }
-        .topbar-title {
-          font-family: 'Barlow Condensed', sans-serif;
-          font-size: 36px; font-weight: 900;
-          line-height: 1; letter-spacing: 0.5px;
-          display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+        .topbar-row2 {
+          display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
         }
-        .count-chip {
-          font-family: 'Barlow', sans-serif;
+        .topbar-title { font-size: 22px; font-weight: 800; letter-spacing: -0.4px; }
+        .count-badge {
           font-size: 12px; font-weight: 700;
-          background: rgba(0,255,135,0.1);
-          color: var(--neon); border: 1px solid rgba(0,255,135,0.25);
+          background: #FFF0F0; color: var(--red);
           padding: 3px 10px; border-radius: 100px;
         }
-        .topbar-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
-
-        .divider { height: 1px; margin: 0 20px; background: linear-gradient(90deg, var(--neon), transparent); opacity: 0.3; }
+        .topbar-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
         /* Search */
-        .search-wrap { padding: 16px 20px 4px; position: relative; }
-        .search-icon { position: absolute; left: 34px; top: 50%; transform: translateY(-50%); font-size: 14px; color: var(--muted); pointer-events: none; }
-        .search {
-          width: 100%; background: var(--card); border: 1px solid var(--border);
-          border-radius: 12px; padding: 13px 16px 13px 40px;
-          font-family: 'Barlow', sans-serif; font-size: 15px;
-          color: var(--text); outline: none; -webkit-appearance: none;
-          transition: border-color 0.2s, box-shadow 0.2s;
+        .search-section { padding: 14px 16px 0; }
+        .search-box {
+          display: flex; align-items: center; gap: 10px;
+          background: var(--white); border: 1.5px solid var(--border);
+          border-radius: 12px; padding: 0 14px;
+          box-shadow: var(--shadow-sm); transition: border-color 0.2s;
         }
-        .search::placeholder { color: var(--muted); }
-        .search:focus { border-color: rgba(0,255,135,0.4); box-shadow: 0 0 0 3px rgba(0,255,135,0.06); }
+        .search-box:focus-within { border-color: var(--red); box-shadow: 0 0 0 3px rgba(230,57,70,0.08); }
+        .search-ico { font-size: 16px; flex-shrink: 0; opacity: 0.4; }
+        .search-input {
+          flex: 1; border: none; outline: none; padding: 13px 0;
+          font-family: 'Inter', sans-serif; font-size: 15px;
+          color: var(--ink); background: transparent;
+        }
+        .search-input::placeholder { color: var(--muted); }
+        .search-clear {
+          font-size: 16px; cursor: pointer; opacity: 0.5; flex-shrink: 0;
+          padding: 4px; border: none; background: none;
+          -webkit-tap-highlight-color: transparent;
+        }
 
-        /* Year filter */
-        .year-scroll {
+        /* Year pills */
+        .year-row {
           display: flex; gap: 8px; overflow-x: auto;
-          padding: 12px 20px 4px; scrollbar-width: none;
+          padding: 12px 16px 0; scrollbar-width: none;
         }
-        .year-scroll::-webkit-scrollbar { display: none; }
+        .year-row::-webkit-scrollbar { display: none; }
         .year-pill {
-          background: var(--card); border: 1px solid var(--border);
-          border-radius: 8px; padding: 7px 16px;
-          font-family: 'Barlow', sans-serif;
-          font-size: 13px; font-weight: 600; color: var(--muted);
-          cursor: pointer; white-space: nowrap; flex-shrink: 0;
-          transition: all 0.15s; -webkit-tap-highlight-color: transparent;
+          background: var(--white); border: 1.5px solid var(--border);
+          border-radius: 100px; padding: 7px 16px;
+          font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+          color: var(--ink2); cursor: pointer; white-space: nowrap; flex-shrink: 0;
+          box-shadow: var(--shadow-sm); transition: all 0.15s;
+          -webkit-tap-highlight-color: transparent;
         }
         .year-pill.active {
-          background: var(--neon); border-color: var(--neon);
-          color: #000; font-weight: 800;
-          box-shadow: 0 4px 16px rgba(0,255,135,0.3);
+          background: var(--ink); border-color: var(--ink);
+          color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         .year-pill:active { transform: scale(0.95); }
 
-        .section-head {
-          padding: 12px 20px 10px;
+        /* Section label */
+        .section-label {
           display: flex; align-items: center; justify-content: space-between;
+          padding: 14px 16px 10px;
         }
-        .section-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.14em; }
-        .section-count { font-size: 11px; font-weight: 700; color: var(--neon); }
+        .label-text { font-size: 13px; font-weight: 700; color: var(--ink2); text-transform: uppercase; letter-spacing: 0.08em; }
+        .label-count { font-size: 12px; font-weight: 600; background: #F0F0F5; color: var(--muted); padding: 3px 10px; border-radius: 100px; }
 
-        /* Paper cards */
-        .papers { padding: 0 20px 20px; display: flex; flex-direction: column; gap: 10px; }
+        /* Papers */
+        .papers { padding: 0 16px 20px; display: flex; flex-direction: column; gap: 10px; }
 
         .paper-card {
-          background: var(--card); border: 1px solid var(--border);
+          background: var(--white);
+          border: 1.5px solid var(--border);
           border-radius: 16px; overflow: hidden;
-          transition: transform 0.15s; -webkit-tap-highlight-color: transparent;
-          position: relative;
-        }
-        .paper-card::before {
-          content: ''; position: absolute; inset: 0;
-          background: linear-gradient(135deg, rgba(255,255,255,0.02), transparent);
-          pointer-events: none;
+          box-shadow: var(--shadow-sm);
+          transition: transform 0.15s;
+          -webkit-tap-highlight-color: transparent;
         }
         .paper-card:active { transform: scale(0.99); }
 
-        /* Neon top bar */
-        .paper-glow-bar { height: 3px; background: linear-gradient(90deg, var(--neon), var(--neon2)); }
-
-        .paper-body { padding: 16px; }
-        .paper-main {
-          display: flex; align-items: flex-start;
-          justify-content: space-between; gap: 12px;
-          margin-bottom: 12px;
+        /* Year accent bar */
+        .paper-top-bar {
+          background: var(--ink);
+          padding: 10px 16px;
+          display: flex; align-items: center;
+          justify-content: space-between;
         }
+        .paper-year-text {
+          font-size: 13px; font-weight: 800;
+          color: #fff; letter-spacing: 0.06em;
+        }
+        .paper-tags { display: flex; gap: 6px; }
+        .tag {
+          font-size: 10px; font-weight: 700; padding: 3px 8px;
+          border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em;
+        }
+        .tag-qp { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.9); }
+        .tag-pdf { background: #16A34A; color: #fff; }
+
+        .paper-body { padding: 14px 16px 16px; }
         .paper-title {
-          font-size: 15px; font-weight: 600;
-          line-height: 1.4; flex: 1; color: var(--text);
+          font-size: 16px; font-weight: 700; line-height: 1.4;
+          color: var(--ink); letter-spacing: -0.2px;
+          margin-bottom: 14px;
         }
-        .paper-year-box {
-          background: rgba(0,255,135,0.08);
-          border: 1px solid rgba(0,255,135,0.15);
-          border-radius: 10px; padding: 6px 12px;
-          text-align: center; flex-shrink: 0;
-        }
-        .paper-year {
-          font-family: 'Barlow Condensed', sans-serif;
-          font-size: 22px; font-weight: 900;
-          color: var(--neon); line-height: 1;
-        }
-        .paper-year-label {
-          font-size: 9px; font-weight: 700;
-          color: var(--muted); text-transform: uppercase;
-          letter-spacing: 0.08em;
-        }
-
-        .paper-chips { display: flex; gap: 6px; margin-bottom: 14px; }
-        .chip {
-          font-size: 10px; font-weight: 800; padding: 3px 10px;
-          border-radius: 5px; text-transform: uppercase; letter-spacing: 0.08em;
-          border: 1px solid;
-        }
-        .chip-qp { background: rgba(0,255,135,0.06); color: var(--neon); border-color: rgba(0,255,135,0.2); }
-        .chip-pdf { background: rgba(0,212,255,0.06); color: var(--neon2); border-color: rgba(0,212,255,0.2); }
 
         /* Buttons */
         .actions { display: flex; gap: 8px; }
         .btn {
-          flex: 1; padding: 11px 10px;
-          border-radius: 10px; font-family: 'Barlow', sans-serif;
-          font-size: 13px; font-weight: 700; letter-spacing: 0.02em;
-          cursor: pointer; border: 1px solid;
+          flex: 1; padding: 12px 10px;
+          border-radius: 10px;
+          font-family: 'Inter', sans-serif;
+          font-size: 14px; font-weight: 700;
+          cursor: pointer; border: none;
           text-decoration: none;
           display: flex; align-items: center; justify-content: center; gap: 6px;
           transition: all 0.15s; -webkit-tap-highlight-color: transparent;
+          letter-spacing: -0.1px;
         }
-        .btn-view {
-          background: rgba(0,255,135,0.08); border-color: rgba(0,255,135,0.25); color: var(--neon);
-        }
-        .btn-view:active { background: rgba(0,255,135,0.16); transform: scale(0.97); }
-        .btn-download {
-          background: rgba(0,212,255,0.08); border-color: rgba(0,212,255,0.25); color: var(--neon2);
-        }
-        .btn-download:active { background: rgba(0,212,255,0.16); transform: scale(0.97); }
+        .btn-view { background: #EEF3FF; color: var(--blue); }
+        .btn-view:active { background: #D8E4FF; transform: scale(0.97); }
+        .btn-download { background: #F0FDF4; color: var(--green); }
+        .btn-download:active { background: #DCFCE7; transform: scale(0.97); }
         .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
 
         .no-pdf {
           font-size: 13px; color: var(--muted); text-align: center;
-          padding: 12px; background: var(--card2); border-radius: 10px;
-          border: 1px dashed var(--border);
+          padding: 12px; background: var(--bg); border-radius: 10px;
         }
 
-        .skeleton {
-          background: linear-gradient(90deg, #0f0f18 25%, #141420 50%, #0f0f18 75%);
+        /* Skeleton */
+        .skel {
+          background: linear-gradient(90deg, #ececf0 25%, #f5f5f8 50%, #ececf0 75%);
           background-size: 200% 100%; animation: shimmer 1.4s infinite;
-          border-radius: 16px; height: 150px;
+          border-radius: 16px; height: 140px;
         }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-        .footer {
-          margin: 4px 20px 0; padding: 20px 0;
-          border-top: 1px solid var(--border);
-          display: flex; align-items: center; justify-content: center; gap: 8px;
-        }
-        .footer-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--neon); }
-        .footer-text { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 0.08em; }
-        .footer-brand { font-size: 12px; font-weight: 800; color: var(--neon); letter-spacing: 0.06em; }
+        .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+        .empty-icon { font-size: 52px; margin-bottom: 14px; display: block; }
+        .empty-title { font-size: 18px; font-weight: 700; color: var(--ink2); margin-bottom: 6px; }
+        .empty-sub { font-size: 14px; }
 
-        .empty { text-align: center; padding: 52px 20px; color: var(--muted); }
-        .empty-icon { font-size: 48px; margin-bottom: 14px; }
-        .empty-title { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 800; color: var(--text2); margin-bottom: 6px; }
-        .empty p { font-size: 14px; }
+        .footer {
+          margin: 8px 16px 0; padding: 20px 16px;
+          background: var(--white); border-radius: 14px;
+          border: 1px solid var(--border);
+          display: flex; flex-direction: column; align-items: center; gap: 4px;
+        }
+        .footer-name { font-size: 13px; font-weight: 800; color: var(--red); }
+        .footer-sub { font-size: 11px; color: var(--muted); }
       `}</style>
 
-      <div className="inner">
-        <div className="topbar">
-          <div className="topbar-row">
-            <Link to={-1} className="back-btn">‹</Link>
-            <div className="topbar-info">
-              <div className="topbar-title">
-                PAPERS
-                {!loading && <span className="count-chip">{papers.length}</span>}
-              </div>
-              <div className="topbar-sub">
-                {loading ? "Loading..." : `${filtered.length} paper${filtered.length !== 1 ? "s" : ""} found`}
-              </div>
+      <div className="topbar">
+        <div className="topbar-row">
+          <Link to={-1} className="back-btn">‹</Link>
+          <div className="topbar-info">
+            <div className="topbar-row2">
+              <span className="topbar-title">Papers</span>
+              {!loading && <span className="count-badge">{papers.length}</span>}
+            </div>
+            <div className="topbar-sub">
+              {loading ? "Loading..." : `${filtered.length} paper${filtered.length !== 1 ? "s" : ""} found`}
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="divider" />
-
-        <div className="search-wrap">
-          <span className="search-icon">🔍</span>
-          <input className="search" placeholder="Search papers..." value={search} onChange={e => setSearch(e.target.value)} />
+      <div className="search-section">
+        <div className="search-box">
+          <span className="search-ico">🔍</span>
+          <input className="search-input" placeholder="Search papers..." value={search} onChange={e => setSearch(e.target.value)} />
+          {search && <button className="search-clear" onClick={() => setSearch("")}>✕</button>}
         </div>
+      </div>
 
-        {!loading && years.length > 1 && (
-          <div className="year-scroll">
-            {years.map(y => (
-              <button key={y} className={`year-pill ${activeYear === y ? "active" : ""}`} onClick={() => setActiveYear(y)}>
-                {y === "All" ? "All Years" : y}
-              </button>
-            ))}
-          </div>
-        )}
-
-        <div className="section-head">
-          <span className="section-title">{activeYear === "All" ? "All Papers" : `Year ${activeYear}`}</span>
-          {!loading && <span className="section-count">{filtered.length} papers</span>}
-        </div>
-
-        <div className="papers">
-          {loading && Array(3).fill(0).map((_, i) => <div key={i} className="skeleton" />)}
-          {!loading && filtered.map(paper => (
-            <div key={paper.id} className="paper-card">
-              <div className="paper-glow-bar" />
-              <div className="paper-body">
-                <div className="paper-main">
-                  <div className="paper-title">{paper.title}</div>
-                  <div className="paper-year-box">
-                    <div className="paper-year">{paper.year}</div>
-                    <div className="paper-year-label">Year</div>
-                  </div>
-                </div>
-                <div className="paper-chips">
-                  <span className="chip chip-qp">Question Paper</span>
-                  {paper.pdf && <span className="chip chip-pdf">PDF Ready</span>}
-                </div>
-                {paper.pdf ? (
-                  <div className="actions">
-                    <a href={paper.pdf} target="_blank" rel="noopener noreferrer" className="btn btn-view">
-                      👁 View
-                    </a>
-                    <button onClick={() => handleDownload(paper)} disabled={downloading === paper.id} className="btn btn-download">
-                      {downloading === paper.id ? "⏳ Wait..." : "⬇ Download"}
-                    </button>
-                  </div>
-                ) : (
-                  <div className="no-pdf">📭 PDF not yet available</div>
-                )}
-              </div>
-            </div>
+      {!loading && years.length > 1 && (
+        <div className="year-row">
+          {years.map(y => (
+            <button key={y} className={`year-pill ${activeYear === y ? "active" : ""}`} onClick={() => setActiveYear(y)}>
+              {y === "All" ? "All Years" : y}
+            </button>
           ))}
         </div>
+      )}
 
-        {!loading && filtered.length === 0 && (
-          <div className="empty">
-            <div className="empty-icon">{search ? "🔍" : "📭"}</div>
-            <div className="empty-title">{search ? "Nothing Found" : "No Papers Yet"}</div>
-            <p>{search ? `No results for "${search}"` : "Check back soon!"}</p>
+      <div className="section-label">
+        <span className="label-text">{activeYear === "All" ? "All Papers" : `Year ${activeYear}`}</span>
+        {!loading && <span className="label-count">{filtered.length}</span>}
+      </div>
+
+      <div className="papers">
+        {loading && Array(3).fill(0).map((_, i) => <div key={i} className="skel" />)}
+        {!loading && filtered.map(paper => (
+          <div key={paper.id} className="paper-card">
+            <div className="paper-top-bar">
+              <span className="paper-year-text">{paper.year}</span>
+              <div className="paper-tags">
+                <span className="tag tag-qp">Q. Paper</span>
+                {paper.pdf && <span className="tag tag-pdf">PDF</span>}
+              </div>
+            </div>
+            <div className="paper-body">
+              <div className="paper-title">{paper.title}</div>
+              {paper.pdf ? (
+                <div className="actions">
+                  <a href={paper.pdf} target="_blank" rel="noopener noreferrer" className="btn btn-view">
+                    👁 View
+                  </a>
+                  <button onClick={() => handleDownload(paper)} disabled={downloading === paper.id} className="btn btn-download">
+                    {downloading === paper.id ? "⏳ Downloading..." : "⬇ Download"}
+                  </button>
+                </div>
+              ) : (
+                <div className="no-pdf">📭 PDF not yet available</div>
+              )}
+            </div>
           </div>
-        )}
+        ))}
+      </div>
 
-        <div className="footer">
-          <div className="footer-dot" />
-          <span className="footer-text">Made with ♥ by</span>
-          <span className="footer-brand">SFI KOTTAKKAL LC</span>
-          <div className="footer-dot" />
+      {!loading && filtered.length === 0 && (
+        <div className="empty">
+          <span className="empty-icon">{search ? "🔍" : "📭"}</span>
+          <div className="empty-title">{search ? "Nothing found" : "No papers yet"}</div>
+          <div className="empty-sub">{search ? `No results for "${search}"` : "Check back soon!"}</div>
         </div>
+      )}
+
+      <div className="footer">
+        <div className="footer-name">★ SFI KOTTAKKAL LC</div>
+        <div className="footer-sub">Made with love for students</div>
       </div>
     </div>
   );

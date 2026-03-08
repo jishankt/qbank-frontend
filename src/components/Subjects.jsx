@@ -3,25 +3,25 @@ import { useParams, Link } from "react-router-dom";
 import API from "../api";
 
 const subjectMeta = {
-  math:        { icon: "📐", color: "#00FF87" },
-  maths:       { icon: "📐", color: "#00FF87" },
-  mathematics: { icon: "📐", color: "#00FF87" },
-  physics:     { icon: "⚡", color: "#00D4FF" },
-  chemistry:   { icon: "⚗️", color: "#FF6B6B" },
-  biology:     { icon: "🌿", color: "#00FF87" },
-  english:     { icon: "✏️", color: "#FFD166" },
-  malayalam:   { icon: "🌴", color: "#00D4FF" },
-  hindi:       { icon: "🪔", color: "#FF6B6B" },
-  history:     { icon: "🏛️", color: "#C77DFF" },
-  geography:   { icon: "🌍", color: "#00D4FF" },
-  science:     { icon: "🔬", color: "#00FF87" },
-  computer:    { icon: "💻", color: "#C77DFF" },
-  economics:   { icon: "📊", color: "#FFD166" },
-  commerce:    { icon: "💼", color: "#FF9F43" },
+  math:        { icon: "📐", bg: "#FFF0F0", color: "#C1121F" },
+  maths:       { icon: "📐", bg: "#FFF0F0", color: "#C1121F" },
+  mathematics: { icon: "📐", bg: "#FFF0F0", color: "#C1121F" },
+  physics:     { icon: "⚡", bg: "#F0F7FF", color: "#1A4FB5" },
+  chemistry:   { icon: "⚗️", bg: "#FFF5F0", color: "#C2410C" },
+  biology:     { icon: "🌿", bg: "#F0FFF6", color: "#1E7A44" },
+  english:     { icon: "✏️", bg: "#FFFBF0", color: "#B45309" },
+  malayalam:   { icon: "🌴", bg: "#F0FDFF", color: "#0E6A87" },
+  hindi:       { icon: "🪔", bg: "#FFF0F0", color: "#C1121F" },
+  history:     { icon: "🏛️", bg: "#F5F0FF", color: "#5B21B6" },
+  geography:   { icon: "🌍", bg: "#F0F7FF", color: "#1A4FB5" },
+  science:     { icon: "🔬", bg: "#F0FFF6", color: "#1E7A44" },
+  computer:    { icon: "💻", bg: "#F5F0FF", color: "#5B21B6" },
+  economics:   { icon: "📊", bg: "#FFFBF0", color: "#B45309" },
+  commerce:    { icon: "💼", bg: "#FFF8F0", color: "#C4611A" },
 };
 function getMeta(name = "") {
   const key = name.toLowerCase().split(" ")[0];
-  return subjectMeta[key] || { icon: "📖", color: "#888" };
+  return subjectMeta[key] || { icon: "📖", bg: "#F5F5F8", color: "#555" };
 }
 
 function Subjects() {
@@ -43,202 +43,190 @@ function Subjects() {
   );
 
   return (
-    <div className="app">
+    <div className="root">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
-          --bg: #050508; --card: #0F0F18; --card2: #141420;
-          --neon: #00FF87; --neon2: #00D4FF;
-          --text: #FFFFFF; --text2: #B0B0C8; --muted: #505068;
-          --border: rgba(255,255,255,0.06); --border2: rgba(0,255,135,0.2);
+          --bg: #F7F7F8; --white: #FFFFFF; --ink: #111118;
+          --ink2: #3D3D4A; --muted: #9898A8; --border: #E8E8EE;
+          --red: #E63946;
+          --shadow-sm: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
         }
-        body { background: var(--bg); }
-        .app {
-          min-height: 100vh; min-height: 100dvh; background: var(--bg);
-          font-family: 'Barlow', sans-serif; color: var(--text);
-          padding-bottom: env(safe-area-inset-bottom, 40px);
-          position: relative; overflow-x: hidden;
+        html, body { background: var(--bg); }
+        .root {
+          min-height: 100vh; min-height: 100dvh;
+          background: var(--bg);
+          font-family: 'Inter', -apple-system, sans-serif;
+          color: var(--ink);
+          padding-bottom: max(env(safe-area-inset-bottom), 32px);
+          -webkit-font-smoothing: antialiased;
         }
-        .app::before {
-          content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-          background: radial-gradient(ellipse 80% 40% at 50% -10%, rgba(0,255,135,0.06) 0%, transparent 60%);
-          pointer-events: none; z-index: 0;
-        }
-        .inner { position: relative; z-index: 1; }
 
         /* Topbar */
-        .topbar { padding: 52px 20px 24px; }
-        .topbar-row { display: flex; align-items: center; gap: 14px; }
+        .topbar {
+          background: var(--white);
+          padding: max(env(safe-area-inset-top), 52px) 20px 18px;
+          border-bottom: 1px solid var(--border);
+          position: sticky; top: 0; z-index: 10;
+        }
+        .topbar-row { display: flex; align-items: center; gap: 12px; }
         .back-btn {
-          width: 42px; height: 42px; border-radius: 12px;
-          background: var(--card); border: 1px solid var(--border);
+          width: 40px; height: 40px; border-radius: 12px;
+          background: var(--bg); border: 1.5px solid var(--border);
           display: flex; align-items: center; justify-content: center;
-          font-size: 20px; color: var(--neon);
+          font-size: 20px; color: var(--ink2);
           text-decoration: none; flex-shrink: 0;
-          -webkit-tap-highlight-color: transparent; transition: opacity 0.15s;
+          -webkit-tap-highlight-color: transparent; transition: background 0.15s;
         }
-        .back-btn:active { opacity: 0.6; }
-        .topbar-text { flex: 1; }
+        .back-btn:active { background: var(--border); }
+        .topbar-info { flex: 1; }
         .topbar-title {
-          font-family: 'Barlow Condensed', sans-serif;
-          font-size: 36px; font-weight: 900;
-          line-height: 1; letter-spacing: 0.5px;
+          font-size: 22px; font-weight: 800;
+          letter-spacing: -0.4px; color: var(--ink);
         }
-        .topbar-sub { font-size: 12px; color: var(--muted); margin-top: 4px; font-weight: 400; }
-
-        /* Divider */
-        .divider {
-          height: 1px; margin: 0 20px;
-          background: linear-gradient(90deg, var(--neon), transparent);
-          opacity: 0.3;
-        }
+        .topbar-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
         /* Search */
-        .search-wrap { padding: 16px 20px 4px; position: relative; }
-        .search-icon { position: absolute; left: 34px; top: 50%; transform: translateY(-50%); font-size: 14px; color: var(--muted); pointer-events: none; }
-        .search {
-          width: 100%; background: var(--card); border: 1px solid var(--border);
-          border-radius: 12px; padding: 13px 16px 13px 40px;
-          font-family: 'Barlow', sans-serif; font-size: 15px;
-          color: var(--text); outline: none; -webkit-appearance: none;
-          transition: border-color 0.2s, box-shadow 0.2s;
+        .search-section { padding: 14px 16px 0; }
+        .search-box {
+          display: flex; align-items: center; gap: 10px;
+          background: var(--white); border: 1.5px solid var(--border);
+          border-radius: 12px; padding: 0 14px;
+          box-shadow: var(--shadow-sm); transition: border-color 0.2s;
         }
-        .search::placeholder { color: var(--muted); }
-        .search:focus { border-color: rgba(0,255,135,0.4); box-shadow: 0 0 0 3px rgba(0,255,135,0.06); }
+        .search-box:focus-within { border-color: var(--red); box-shadow: 0 0 0 3px rgba(230,57,70,0.08); }
+        .search-ico { font-size: 16px; flex-shrink: 0; opacity: 0.4; }
+        .search-input {
+          flex: 1; border: none; outline: none; padding: 13px 0;
+          font-family: 'Inter', sans-serif; font-size: 15px;
+          color: var(--ink); background: transparent;
+        }
+        .search-input::placeholder { color: var(--muted); }
+        .search-clear {
+          font-size: 16px; cursor: pointer; opacity: 0.5; flex-shrink: 0;
+          padding: 4px; border: none; background: none;
+          -webkit-tap-highlight-color: transparent;
+        }
 
-        .section-head {
-          padding: 14px 20px 10px;
+        /* Section label */
+        .section-label {
           display: flex; align-items: center; justify-content: space-between;
+          padding: 16px 16px 10px;
         }
-        .section-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.14em; }
-        .section-count { font-size: 11px; font-weight: 700; color: var(--neon); }
+        .label-text { font-size: 13px; font-weight: 700; color: var(--ink2); text-transform: uppercase; letter-spacing: 0.08em; }
+        .label-count { font-size: 12px; font-weight: 600; background: #F0F0F5; color: var(--muted); padding: 3px 10px; border-radius: 100px; }
 
         /* Subject list */
-        .list { padding: 0 20px 20px; display: flex; flex-direction: column; gap: 8px; }
+        .list { padding: 0 16px 20px; display: flex; flex-direction: column; gap: 8px; }
 
         .subject-card {
-          background: var(--card); border: 1px solid var(--border);
-          border-radius: 14px; padding: 16px;
-          text-decoration: none; color: var(--text);
+          background: var(--white);
+          border: 1.5px solid var(--border);
+          border-radius: 14px; padding: 14px 16px;
+          text-decoration: none; color: var(--ink);
           display: flex; align-items: center; gap: 14px;
-          position: relative; overflow: hidden;
-          transition: transform 0.15s, border-color 0.18s;
+          box-shadow: var(--shadow-sm);
+          transition: transform 0.15s;
           -webkit-tap-highlight-color: transparent;
         }
         .subject-card:active { transform: scale(0.98); }
 
-        .subject-num {
-          position: absolute; right: 16px; top: 50%;
-          transform: translateY(-50%);
-          font-family: 'Barlow Condensed', sans-serif;
-          font-size: 32px; font-weight: 900;
-          color: rgba(255,255,255,0.04); pointer-events: none;
-        }
-
-        .subject-icon {
-          width: 48px; height: 48px; border-radius: 13px;
+        .subject-icon-wrap {
+          width: 50px; height: 50px; border-radius: 14px;
           display: flex; align-items: center; justify-content: center;
-          font-size: 24px; flex-shrink: 0;
-          position: relative;
-        }
-        .subject-icon::after {
-          content: ''; position: absolute; inset: 0;
-          border-radius: 13px; border: 1px solid rgba(255,255,255,0.08);
+          font-size: 26px; flex-shrink: 0;
         }
         .subject-info { flex: 1; min-width: 0; }
         .subject-name {
-          font-family: 'Barlow Condensed', sans-serif;
-          font-size: 20px; font-weight: 800; line-height: 1.1;
+          font-size: 16px; font-weight: 700;
           white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+          letter-spacing: -0.2px;
         }
-        .subject-hint { font-size: 12px; color: var(--muted); margin-top: 2px; font-weight: 400; }
+        .subject-hint { font-size: 12px; color: var(--muted); margin-top: 2px; }
         .subject-arrow {
-          width: 30px; height: 30px; border-radius: 8px;
+          width: 32px; height: 32px; border-radius: 9px;
           display: flex; align-items: center; justify-content: center;
-          font-size: 16px; font-weight: 700; flex-shrink: 0;
+          font-size: 18px; font-weight: 600;
+          color: var(--muted); background: var(--bg); flex-shrink: 0;
         }
 
         /* Skeleton */
-        .skeleton {
-          background: linear-gradient(90deg, #0f0f18 25%, #141420 50%, #0f0f18 75%);
+        .skel {
+          background: linear-gradient(90deg, #ececf0 25%, #f5f5f8 50%, #ececf0 75%);
           background-size: 200% 100%; animation: shimmer 1.4s infinite;
-          border-radius: 14px; height: 80px;
+          border-radius: 14px; height: 78px;
         }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-        .footer {
-          margin: 4px 20px 0; padding: 20px 0;
-          border-top: 1px solid var(--border);
-          display: flex; align-items: center; justify-content: center; gap: 8px;
-        }
-        .footer-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--neon); }
-        .footer-text { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 0.08em; }
-        .footer-brand { font-size: 12px; font-weight: 800; color: var(--neon); letter-spacing: 0.06em; }
+        .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+        .empty-icon { font-size: 52px; margin-bottom: 14px; display: block; }
+        .empty-title { font-size: 18px; font-weight: 700; color: var(--ink2); margin-bottom: 6px; }
+        .empty-sub { font-size: 14px; }
 
-        .empty { text-align: center; padding: 52px 20px; color: var(--muted); }
-        .empty-icon { font-size: 48px; margin-bottom: 14px; }
-        .empty-title { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 800; color: var(--text2); margin-bottom: 6px; }
-        .empty p { font-size: 14px; }
+        .footer {
+          margin: 8px 16px 0; padding: 20px 16px;
+          background: var(--white); border-radius: 14px;
+          border: 1px solid var(--border);
+          display: flex; flex-direction: column; align-items: center; gap: 4px;
+        }
+        .footer-name { font-size: 13px; font-weight: 800; color: var(--red); }
+        .footer-sub { font-size: 11px; color: var(--muted); }
       `}</style>
 
-      <div className="inner">
-        <div className="topbar">
-          <div className="topbar-row">
-            <Link to="/" className="back-btn">‹</Link>
-            <div className="topbar-text">
-              <div className="topbar-title">SUBJECTS</div>
-              <div className="topbar-sub">
-                {loading ? "Loading..." : `${subjects.length} subject${subjects.length !== 1 ? "s" : ""} available`}
-              </div>
+      <div className="topbar">
+        <div className="topbar-row">
+          <Link to="/" className="back-btn">‹</Link>
+          <div className="topbar-info">
+            <div className="topbar-title">Subjects</div>
+            <div className="topbar-sub">
+              {loading ? "Loading..." : `${subjects.length} subject${subjects.length !== 1 ? "s" : ""}`}
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="divider" />
-
-        <div className="search-wrap">
-          <span className="search-icon">🔍</span>
-          <input className="search" placeholder="Search subjects..." value={search} onChange={e => setSearch(e.target.value)} />
+      <div className="search-section">
+        <div className="search-box">
+          <span className="search-ico">🔍</span>
+          <input className="search-input" placeholder="Search subjects..." value={search} onChange={e => setSearch(e.target.value)} />
+          {search && <button className="search-clear" onClick={() => setSearch("")}>✕</button>}
         </div>
+      </div>
 
-        <div className="section-head">
-          <span className="section-title">Available Subjects</span>
-          {!loading && <span className="section-count">{filtered.length} found</span>}
+      <div className="section-label">
+        <span className="label-text">Available</span>
+        {!loading && <span className="label-count">{filtered.length}</span>}
+      </div>
+
+      <div className="list">
+        {loading && Array(4).fill(0).map((_, i) => <div key={i} className="skel" />)}
+        {!loading && filtered.map(sub => {
+          const { icon, bg, color } = getMeta(sub.name);
+          return (
+            <Link key={sub.id} to={`/papers/${sub.id}`} className="subject-card">
+              <div className="subject-icon-wrap" style={{ background: bg }}>{icon}</div>
+              <div className="subject-info">
+                <div className="subject-name" style={{ color }}>{sub.name}</div>
+                <div className="subject-hint">View question papers</div>
+              </div>
+              <div className="subject-arrow">›</div>
+            </Link>
+          );
+        })}
+      </div>
+
+      {!loading && filtered.length === 0 && (
+        <div className="empty">
+          <span className="empty-icon">🔍</span>
+          <div className="empty-title">Nothing found</div>
+          <div className="empty-sub">No subjects match "{search}"</div>
         </div>
+      )}
 
-        <div className="list">
-          {loading && Array(4).fill(0).map((_, i) => <div key={i} className="skeleton" />)}
-          {!loading && filtered.map((sub, i) => {
-            const { icon, color } = getMeta(sub.name);
-            return (
-              <Link key={sub.id} to={`/papers/${sub.id}`} className="subject-card">
-                <span className="subject-num">{String(i + 1).padStart(2, "0")}</span>
-                <div className="subject-icon" style={{ background: color + "18" }}>{icon}</div>
-                <div className="subject-info">
-                  <div className="subject-name" style={{ color }}>{sub.name}</div>
-                  <div className="subject-hint">View question papers</div>
-                </div>
-                <div className="subject-arrow" style={{ background: color + "18", color }}>›</div>
-              </Link>
-            );
-          })}
-        </div>
-
-        {!loading && filtered.length === 0 && (
-          <div className="empty">
-            <div className="empty-icon">🔍</div>
-            <div className="empty-title">Nothing Found</div>
-            <p>No subjects match "{search}"</p>
-          </div>
-        )}
-
-        <div className="footer">
-          <div className="footer-dot" />
-          <span className="footer-text">Made with ♥ by</span>
-          <span className="footer-brand">SFI KOTTAKKAL LC</span>
-          <div className="footer-dot" />
-        </div>
+      <div className="footer">
+        <div className="footer-name">★ SFI KOTTAKKAL LC</div>
+        <div className="footer-sub">Made with love for students</div>
       </div>
     </div>
   );
