@@ -3,30 +3,59 @@ import { useParams, Link } from "react-router-dom";
 import API from "../api";
 import { BottomNav } from "./Classes";
 
+// Detect language from paper title
+function detectLang(title = "") {
+  // Malayalam Unicode range: \u0D00-\u0D7F
+  const hasMal = /[\u0D00-\u0D7F]/.test(title);
+  if (hasMal) return "mal";
+  // If title contains known Malayalam keywords
+  const malKeywords = ["malayalam", "മലയാളം", "mal", "ഭാഷ"];
+  const lower = title.toLowerCase();
+  if (malKeywords.some(k => lower.includes(k))) return "mal";
+  return "eng";
+}
+
 export default function Papers() {
   const { subjectId } = useParams();
-  const [papers, setPapers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [papers,      setPapers]      = useState([]);
+  const [loading,     setLoading]     = useState(true);
+  const [search,      setSearch]      = useState("");
   const [downloading, setDownloading] = useState(null);
-  const [activeYear, setActiveYear] = useState("All");
-  const [bookmarks, setBookmarks] = useState(() => JSON.parse(localStorage.getItem("bookmarks") || "[]"));
+  const [activeYear,  setActiveYear]  = useState("All");
+  const [activeLang,  setActiveLang]  = useState("all"); // "all" | "eng" | "mal"
+  const [bookmarks,   setBookmarks]   = useState(
+    () => JSON.parse(localStorage.getItem("bookmarks") || "[]")
+  );
   const [toastMsg, setToastMsg] = useState("");
 
   useEffect(() => {
     setLoading(true);
-    API.get(`papers/${subjectId}/`).then(r => setPapers(r.data)).catch(() => {}).finally(() => setLoading(false));
+    API.get(`papers/${subjectId}/`)
+      .then(r => setPapers(r.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [subjectId]);
 
+  // Attach lang to each paper
+  const papersWithLang = papers.map(p => ({ ...p, lang: detectLang(p.title) }));
+
+  // Check if this subject has both languages
+  const hasEng = papersWithLang.some(p => p.lang === "eng");
+  const hasMal = papersWithLang.some(p => p.lang === "mal");
+  const showLangTabs = hasEng && hasMal;
+
   const years = ["All", ...new Set(papers.map(p => p.year).sort((a, b) => b - a))];
-  const filtered = papers.filter(p =>
-    p.title.toLowerCase().includes(search.toLowerCase()) &&
-    (activeYear === "All" || p.year === activeYear)
-  );
 
-  const isBookmarked = (id) => bookmarks.some(b => b.id === id);
+  const filtered = papersWithLang.filter(p => {
+    const matchSearch = p.title.toLowerCase().includes(search.toLowerCase());
+    const matchYear   = activeYear === "All" || p.year === activeYear;
+    const matchLang   = activeLang === "all"  || p.lang === activeLang;
+    return matchSearch && matchYear && matchLang;
+  });
 
-  const toggleBookmark = (paper) => {
+  const isBookmarked = id => bookmarks.some(b => b.id === id);
+
+  const toggleBookmark = paper => {
     let next;
     if (isBookmarked(paper.id)) {
       next = bookmarks.filter(b => b.id !== paper.id);
@@ -39,130 +68,279 @@ export default function Papers() {
     localStorage.setItem("bookmarks", JSON.stringify(next));
   };
 
-  const showToast = (msg) => {
+  const showToast = msg => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(""), 2200);
   };
 
-  const handleDownload = async (paper) => {
+  const handleDownload = async paper => {
     if (!paper.pdf) return;
     setDownloading(paper.id);
     try {
       const r = await fetch(paper.pdf);
       if (!r.ok) throw new Error();
       const blob = await r.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url; a.download = `${paper.title}_${paper.year}.pdf`;
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href = url;
+      a.download = `${paper.title}_${paper.year}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(url), 5000);
       showToast("Download started ⬇");
-    } catch { alert("Download failed. Try opening the PDF manually."); }
-    finally { setDownloading(null); }
+    } catch {
+      alert("Download failed. Try opening the PDF manually.");
+    } finally {
+      setDownloading(null);
+    }
   };
 
   return (
     <>
-      <div className="root">
+      <div style={{
+        minHeight: "100dvh",
+        background: "#F7F7F7",
+        paddingBottom: "calc(max(env(safe-area-inset-bottom),12px) + 68px)",
+      }}>
         <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+          @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
           *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
-          :root { --bg:#FAFAF8; --surface:#FFFFFF; --border:#F0F0EE; --border2:#E5E5E3; --t1:#1C1C1E; --t2:#6B7280; --t3:#9CA3AF; --t4:#D1D5DB; }
-          html,body { background:var(--bg); -webkit-font-smoothing:antialiased; overscroll-behavior:none; }
-          .root { min-height:100vh; min-height:100dvh; background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--t1); overflow-x:hidden; padding-bottom:calc(max(env(safe-area-inset-bottom),14px) + 72px); }
+          :root {
+            --accent: #FF6B35;
+            --accent-light: #FFF0EB;
+            --accent-mid: #FFD5C5;
+            --bg: #F7F7F7;
+            --card: #FFFFFF;
+            --t1: #1A1A1A;
+            --t2: #666;
+            --t3: #AAA;
+            --border: #EBEBEB;
+          }
+          html, body { background: var(--bg); -webkit-font-smoothing: antialiased; overscroll-behavior: none; }
+          * { font-family: 'Nunito', sans-serif; }
 
-          .bg-texture { position:fixed; inset:0; z-index:0; pointer-events:none; background-image:radial-gradient(circle,#E5E7EB 1px,transparent 1px); background-size:32px 32px; opacity:0.5; }
-          .bg-glow { position:fixed; top:-80px; right:-60px; width:280px; height:280px; border-radius:50%; background:radial-gradient(circle,rgba(99,102,241,0.07),transparent 70%); pointer-events:none; z-index:0; }
+          .page { animation: fadeUp 0.3s ease both; }
+          @keyframes fadeUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
 
-          .page { position:relative; z-index:2; animation:pageIn 0.4s ease both; }
-          @keyframes pageIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
-
-          .topbar { background:rgba(250,250,248,0.92); border-bottom:1px solid var(--border); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); padding:max(env(safe-area-inset-top),52px) 20px 18px; position:sticky; top:0; z-index:20; }
+          /* top bar */
+          .topbar {
+            background: #fff; border-bottom: 1px solid var(--border);
+            padding: max(env(safe-area-inset-top), 48px) 20px 16px;
+            position: sticky; top: 0; z-index: 20;
+          }
           .trow { display:flex; align-items:center; gap:12px; }
-          .back { width:40px; height:40px; border-radius:13px; flex-shrink:0; background:var(--surface); border:1.5px solid var(--border2); display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--t1); text-decoration:none; box-shadow:0 1px 4px rgba(0,0,0,0.06); transition:transform 0.2s; -webkit-tap-highlight-color:transparent; }
-          .back:active { transform:scale(0.88); }
-          .tinfo { flex:1; min-width:0; }
-          .title-row { display:flex; align-items:center; gap:8px; }
-          .ttitle { font-family:'Playfair Display',serif; font-size:24px; font-weight:800; letter-spacing:-0.4px; }
-          .count-chip { font-size:12px; font-weight:700; color:#6366F1; background:#EEF2FF; border:1px solid #C7D2FE; padding:3px 10px; border-radius:100px; }
-          .tsub { font-size:12px; color:var(--t2); margin-top:2px; }
+          .back {
+            width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;
+            background: var(--bg); border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; color: var(--t1); text-decoration: none;
+            -webkit-tap-highlight-color: transparent;
+            transition: transform 0.15s;
+          }
+          .back:active { transform: scale(0.88); }
+          .tinfo { flex: 1; min-width: 0; }
+          .title-row { display: flex; align-items: center; gap: 8px; }
+          .ttitle { font-size: 22px; font-weight: 900; color: var(--t1); letter-spacing: -0.3px; }
+          .count-chip {
+            font-size: 11px; font-weight: 800; color: var(--accent);
+            background: var(--accent-light); border-radius: 100px; padding: 3px 10px;
+          }
+          .tsub { font-size: 12px; font-weight: 600; color: var(--t3); margin-top: 2px; }
 
-          .search-wrap { padding:14px 20px 0; }
-          .sbox { display:flex; align-items:center; gap:10px; background:var(--surface); border:1.5px solid var(--border2); border-radius:16px; padding:0 16px; box-shadow:0 1px 4px rgba(0,0,0,0.04); transition:border-color 0.2s, box-shadow 0.2s; }
-          .sbox:focus-within { border-color:#6366F1; box-shadow:0 0 0 4px rgba(99,102,241,0.08); }
-          .s-ico { font-size:15px; opacity:0.3; flex-shrink:0; }
-          .s-in { flex:1; border:none; outline:none; padding:14px 0; font-family:'DM Sans',sans-serif; font-size:15px; color:var(--t1); background:transparent; }
-          .s-in::placeholder { color:var(--t4); }
-          .s-clr { background:#F3F4F6; border:1px solid var(--border2); color:var(--t2); width:22px; height:22px; border-radius:6px; font-size:11px; display:flex; align-items:center; justify-content:center; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+          /* language tabs */
+          .lang-tabs {
+            display: flex; gap: 6px; padding: 12px 20px 0;
+          }
+          .lang-tab {
+            flex: 1; padding: 10px 8px; border-radius: 12px;
+            font-size: 13px; font-weight: 800; cursor: pointer;
+            border: 1.5px solid var(--border);
+            background: #fff; color: var(--t2);
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1);
+            -webkit-tap-highlight-color: transparent;
+          }
+          .lang-tab.active {
+            background: var(--accent); border-color: var(--accent);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(255,107,53,0.28);
+          }
+          .lang-tab:not(.active):active { transform: scale(0.95); }
+          .lang-flag { font-size: 16px; }
+          .lang-count {
+            font-size: 10px; font-weight: 800;
+            background: rgba(255,255,255,0.25); border-radius: 100px;
+            padding: 1px 7px; margin-left: 2px;
+          }
+          .lang-tab:not(.active) .lang-count {
+            background: var(--bg); color: var(--t3);
+          }
 
-          .year-row { display:flex; gap:8px; overflow-x:auto; padding:12px 20px 0; scrollbar-width:none; }
-          .year-row::-webkit-scrollbar { display:none; }
-          .ypill { background:var(--surface); border:1.5px solid var(--border2); border-radius:100px; padding:8px 18px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; color:var(--t2); cursor:pointer; white-space:nowrap; flex-shrink:0; transition:all 0.2s cubic-bezier(0.34,1.56,0.64,1); -webkit-tap-highlight-color:transparent; box-shadow:0 1px 4px rgba(0,0,0,0.04); }
-          .ypill.active { background:#1C1C1E; border-color:#1C1C1E; color:#fff; font-weight:700; box-shadow:0 4px 14px rgba(0,0,0,0.18); }
-          .ypill:not(.active):active { transform:scale(0.93); }
+          /* search */
+          .srch-wrap { padding: 12px 20px 0; }
+          .srch {
+            display: flex; align-items: center; gap: 8px;
+            background: #fff; border: 1.5px solid var(--border);
+            border-radius: 14px; padding: 0 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+          }
+          .srch:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(255,107,53,0.1);
+          }
+          .srch-ico { font-size: 14px; opacity: 0.3; flex-shrink: 0; }
+          .srch input {
+            flex: 1; border: none; outline: none; padding: 13px 0;
+            font-size: 14px; font-weight: 600; color: var(--t1); background: transparent;
+          }
+          .srch input::placeholder { color: var(--t3); font-weight: 500; }
+          .srch-clr {
+            background: #f5f5f5; border: none; border-radius: 6px;
+            width: 20px; height: 20px; font-size: 10px;
+            color: var(--t2); display: flex; align-items: center; justify-content: center;
+            cursor: pointer; -webkit-tap-highlight-color: transparent;
+          }
 
-          .sec-bar { display:flex; align-items:center; justify-content:space-between; padding:16px 20px 10px; }
-          .sec-title { font-size:11px; font-weight:700; color:var(--t3); text-transform:uppercase; letter-spacing:0.14em; }
-          .sec-count { font-size:12px; color:var(--t2); }
+          /* year pills */
+          .year-row { display: flex; gap: 7px; overflow-x: auto; padding: 10px 20px 0; scrollbar-width: none; }
+          .year-row::-webkit-scrollbar { display: none; }
+          .ypill {
+            background: #fff; border: 1.5px solid var(--border);
+            border-radius: 100px; padding: 7px 16px;
+            font-size: 12px; font-weight: 700; color: var(--t2);
+            cursor: pointer; white-space: nowrap; flex-shrink: 0;
+            transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1);
+            -webkit-tap-highlight-color: transparent;
+          }
+          .ypill.active {
+            background: var(--t1); border-color: var(--t1);
+            color: #fff; box-shadow: 0 3px 10px rgba(0,0,0,0.18);
+          }
+          .ypill:not(.active):active { transform: scale(0.93); }
 
-          .papers { padding:0 20px 20px; display:flex; flex-direction:column; gap:12px; }
+          /* section bar */
+          .sec { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px 8px; }
+          .sec-t { font-size: 11px; font-weight: 800; color: var(--t3); text-transform: uppercase; letter-spacing: 0.12em; }
+          .sec-c { font-size: 12px; font-weight: 700; color: var(--t2); }
 
-          .pcard { background:var(--surface); border:1.5px solid var(--border2); border-radius:22px; overflow:hidden; transition:transform 0.15s; -webkit-tap-highlight-color:transparent; animation:cardIn 0.35s ease both; box-shadow:0 2px 12px rgba(0,0,0,0.05); }
-          .pcard:active { transform:scale(0.99); }
+          /* paper cards */
+          .papers { padding: 0 20px 20px; display: flex; flex-direction: column; gap: 10px; }
+
+          .pcard {
+            background: #fff; border: 1.5px solid var(--border);
+            border-radius: 20px; overflow: hidden;
+            animation: cardIn 0.3s ease both;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+          }
           @keyframes cardIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 
-          .pcard-head { padding:16px 20px 14px; border-bottom:1px solid var(--border); background:#F9FAFB; display:flex; align-items:center; justify-content:space-between; position:relative; }
-          .year-block { display:flex; align-items:baseline; gap:6px; }
-          .year-big { font-family:'Playfair Display',serif; font-size:32px; font-weight:800; letter-spacing:-1px; line-height:1; color:var(--t1); }
-          .year-lbl { font-size:10px; font-weight:600; color:var(--t3); text-transform:uppercase; letter-spacing:0.1em; }
+          .pcard-head {
+            padding: 14px 18px 12px;
+            border-bottom: 1px solid var(--border);
+            background: #FAFAFA;
+            display: flex; align-items: center; justify-content: space-between;
+          }
+          .year-block { display: flex; align-items: baseline; gap: 5px; }
+          .year-big { font-size: 28px; font-weight: 900; color: var(--t1); line-height: 1; letter-spacing: -0.5px; }
+          .year-lbl { font-size: 10px; font-weight: 700; color: var(--t3); text-transform: uppercase; letter-spacing: 0.1em; }
 
-          .head-right { display:flex; align-items:center; gap:8px; }
-          .badge-row { display:flex; gap:6px; align-items:center; }
-          .badge { font-size:10px; font-weight:700; padding:5px 10px; border-radius:8px; text-transform:uppercase; letter-spacing:0.06em; }
-          .b-qp { background:#F3F4F6; border:1px solid var(--border2); color:var(--t2); }
-          .b-pdf { background:#D1FAE5; border:1px solid #6EE7B7; color:#065F46; }
+          .head-right { display: flex; align-items: center; gap: 8px; }
 
-          .bm-btn { width:34px; height:34px; border-radius:10px; flex-shrink:0; background:var(--surface); border:1.5px solid var(--border2); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; transition:all 0.2s cubic-bezier(0.34,1.56,0.64,1); -webkit-tap-highlight-color:transparent; }
-          .bm-btn.saved { background:#FEF9C3; border-color:#FDE047; }
-          .bm-btn:active { transform:scale(0.82); }
+          /* lang badge on card */
+          .lang-badge {
+            font-size: 10px; font-weight: 800; padding: 4px 10px;
+            border-radius: 8px; text-transform: uppercase; letter-spacing: 0.06em;
+          }
+          .lang-badge.eng { background: #EFF6FF; color: #2563EB; }
+          .lang-badge.mal { background: #F0FDF4; color: #15803D; }
 
-          .pcard-body { padding:16px 20px 18px; }
-          .paper-title { font-family:'Playfair Display',serif; font-size:15px; font-weight:700; line-height:1.5; letter-spacing:-0.2px; margin-bottom:16px; color:var(--t1); }
+          .pdf-badge {
+            font-size: 10px; font-weight: 800; padding: 4px 10px;
+            border-radius: 8px; background: var(--accent-light); color: var(--accent);
+          }
 
-          .actions { display:flex; gap:8px; }
-          .btn { flex:1; padding:12px 10px; border-radius:13px; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:7px; transition:all 0.2s; text-decoration:none; -webkit-tap-highlight-color:transparent; }
-          .btn-view { background:#EFF6FF; border:1.5px solid #BFDBFE; color:#1D4ED8; }
-          .btn-view:active { background:#DBEAFE; transform:scale(0.96); }
-          .btn-dl { background:#ECFDF5; border:1.5px solid #A7F3D0; color:#065F46; }
-          .btn-dl:active { background:#D1FAE5; transform:scale(0.96); }
-          .btn:disabled { opacity:0.4; cursor:not-allowed; transform:none!important; }
+          .bm-btn {
+            width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
+            background: #fff; border: 1.5px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+            -webkit-tap-highlight-color: transparent;
+          }
+          .bm-btn.saved { background: #FEFCE8; border-color: #FDE047; }
+          .bm-btn:active { transform: scale(0.78); }
 
-          .no-pdf { font-size:13px; color:var(--t3); text-align:center; padding:14px; background:#F9FAFB; border-radius:12px; border:1px dashed var(--border2); }
+          .pcard-body { padding: 14px 18px 16px; }
+          .paper-title {
+            font-size: 14px; font-weight: 700; line-height: 1.5;
+            color: var(--t1); margin-bottom: 14px;
+          }
 
-          .skel { background:linear-gradient(90deg,#F9FAFB 25%,#F3F4F6 50%,#F9FAFB 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:22px; height:158px; border:1px solid var(--border); }
-          @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+          .actions { display: flex; gap: 8px; }
+          .btn {
+            flex: 1; padding: 11px 8px; border-radius: 12px;
+            font-size: 13px; font-weight: 800; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            transition: transform 0.15s; text-decoration: none;
+            -webkit-tap-highlight-color: transparent;
+          }
+          .btn-view { background: #EFF6FF; border: 1.5px solid #BFDBFE; color: #1D4ED8; }
+          .btn-view:active { transform: scale(0.95); background: #DBEAFE; }
+          .btn-dl   { background: var(--accent-light); border: 1.5px solid var(--accent-mid); color: var(--accent); }
+          .btn-dl:active { transform: scale(0.95); background: var(--accent-mid); }
+          .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
 
-          .empty { text-align:center; padding:70px 20px; }
-          .empty-icon { font-size:52px; display:block; margin-bottom:16px; }
-          .empty-title { font-family:'Playfair Display',serif; font-size:20px; font-weight:700; color:var(--t2); margin-bottom:8px; }
-          .empty-sub { font-size:14px; color:var(--t3); }
+          .no-pdf {
+            font-size: 12px; font-weight: 600; color: var(--t3);
+            text-align: center; padding: 12px;
+            background: #FAFAFA; border-radius: 10px;
+            border: 1px dashed var(--border);
+          }
 
-          .footer { margin:8px 20px 0; background:var(--surface); border:1px solid var(--border2); border-radius:20px; padding:18px 20px; display:flex; align-items:center; gap:14px; box-shadow:0 1px 4px rgba(0,0,0,0.04); }
-          .footer-logo { width:42px; height:42px; border-radius:13px; background:#1C1C1E; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
-          .footer-name { font-size:13px; font-weight:700; color:var(--t1); }
-          .footer-sub { font-size:11px; color:var(--t3); margin-top:2px; }
-          .footer-heart { margin-left:auto; font-size:18px; animation:heartbeat 2s ease-in-out infinite; }
-          @keyframes heartbeat{0%,100%{transform:scale(1)}15%{transform:scale(1.3)}30%{transform:scale(1)}}
+          /* skeleton */
+          .skel {
+            border-radius: 20px; height: 148px; border: 1px solid var(--border);
+            background: linear-gradient(90deg,#f8f8f8 25%,#f0f0f0 50%,#f8f8f8 75%);
+            background-size: 200% 100%; animation: shim 1.4s infinite;
+          }
+          @keyframes shim { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
-          .toast { position:fixed; bottom:90px; left:50%; transform:translateX(-50%) translateY(16px); background:#1C1C1E; border-radius:100px; padding:10px 22px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; color:#fff; white-space:nowrap; z-index:500; opacity:0; transition:opacity 0.25s, transform 0.25s; pointer-events:none; box-shadow:0 8px 24px rgba(0,0,0,0.18); }
-          .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+          /* empty */
+          .empty { text-align: center; padding: 60px 20px; }
+          .empty-icon { font-size: 48px; display: block; margin-bottom: 12px; }
+          .empty-t { font-size: 18px; font-weight: 800; color: var(--t2); margin-bottom: 6px; }
+          .empty-s { font-size: 13px; font-weight: 500; color: var(--t3); }
+
+          /* footer */
+          .footer {
+            margin: 4px 20px 0; background: #fff; border: 1px solid var(--border);
+            border-radius: 18px; padding: 15px 18px;
+            display: flex; align-items: center; gap: 12px;
+          }
+          .footer-ico { width: 38px; height: 38px; border-radius: 11px; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+          .footer-name { font-size: 13px; font-weight: 800; color: var(--t1); }
+          .footer-sub { font-size: 11px; font-weight: 500; color: var(--t3); margin-top: 1px; }
+          .footer-heart { margin-left: auto; font-size: 17px; animation: hb 2s ease-in-out infinite; }
+          @keyframes hb { 0%,100%{transform:scale(1)} 15%{transform:scale(1.3)} 30%{transform:scale(1)} }
+
+          /* toast */
+          .toast {
+            position: fixed; bottom: 84px; left: 50%;
+            transform: translateX(-50%) translateY(12px);
+            background: #1A1A1A; border-radius: 100px;
+            padding: 10px 20px; font-size: 13px; font-weight: 700; color: #fff;
+            white-space: nowrap; z-index: 500;
+            opacity: 0; transition: opacity 0.22s, transform 0.22s;
+            pointer-events: none; box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+          }
+          .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
         `}</style>
 
-        <div className="bg-texture" />
-        <div className="bg-glow" />
         <div className={`toast ${toastMsg ? "show" : ""}`}>{toastMsg}</div>
 
         <div className="page">
+          {/* Top bar */}
           <div className="topbar">
             <div className="trow">
               <Link to={-1} className="back">‹</Link>
@@ -171,63 +349,135 @@ export default function Papers() {
                   <span className="ttitle">Papers</span>
                   {!loading && <span className="count-chip">{papers.length}</span>}
                 </div>
-                <div className="tsub">{loading ? "Loading…" : `${filtered.length} paper${filtered.length !== 1 ? "s" : ""} found`}</div>
+                <div className="tsub">
+                  {loading ? "Loading…" : `${filtered.length} paper${filtered.length !== 1 ? "s" : ""} found`}
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="search-wrap">
-            <div className="sbox">
-              <span className="s-ico">🔍</span>
-              <input className="s-in" placeholder="Search papers…" value={search} onChange={e => setSearch(e.target.value)} />
-              {search && <button className="s-clr" onClick={() => setSearch("")}>✕</button>}
+          {/* Language tabs — only shown when both languages exist */}
+          {!loading && showLangTabs && (
+            <div className="lang-tabs">
+              <button
+                className={`lang-tab ${activeLang === "all" ? "active" : ""}`}
+                onClick={() => setActiveLang("all")}
+              >
+                <span className="lang-flag">📋</span>
+                All
+                <span className="lang-count">{papers.length}</span>
+              </button>
+              <button
+                className={`lang-tab ${activeLang === "eng" ? "active" : ""}`}
+                onClick={() => setActiveLang("eng")}
+              >
+                <span className="lang-flag">🇬🇧</span>
+                English
+                <span className="lang-count">
+                  {papersWithLang.filter(p => p.lang === "eng").length}
+                </span>
+              </button>
+              <button
+                className={`lang-tab ${activeLang === "mal" ? "active" : ""}`}
+                onClick={() => setActiveLang("mal")}
+              >
+                <span className="lang-flag">🌴</span>
+                Malayalam
+                <span className="lang-count">
+                  {papersWithLang.filter(p => p.lang === "mal").length}
+                </span>
+              </button>
+            </div>
+          )}
+
+          {/* Search */}
+          <div className="srch-wrap">
+            <div className="srch">
+              <span className="srch-ico">🔍</span>
+              <input
+                placeholder="Search papers…"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+              {search && (
+                <button className="srch-clr" onClick={() => setSearch("")}>✕</button>
+              )}
             </div>
           </div>
 
+          {/* Year filter pills */}
           {!loading && years.length > 1 && (
             <div className="year-row">
               {years.map(y => (
-                <button key={y} className={`ypill ${activeYear === y ? "active" : ""}`} onClick={() => setActiveYear(y)}>
+                <button
+                  key={y}
+                  className={`ypill ${activeYear === y ? "active" : ""}`}
+                  onClick={() => setActiveYear(y)}
+                >
                   {y === "All" ? "All Years" : y}
                 </button>
               ))}
             </div>
           )}
 
-          <div className="sec-bar">
-            <span className="sec-title">{activeYear === "All" ? "All Papers" : `Year ${activeYear}`}</span>
-            {!loading && <span className="sec-count">{filtered.length} papers</span>}
+          {/* Section label */}
+          <div className="sec">
+            <span className="sec-t">
+              {activeLang === "mal" ? "Malayalam Papers" :
+               activeLang === "eng" ? "English Papers"  : "All Papers"}
+              {activeYear !== "All" ? ` · ${activeYear}` : ""}
+            </span>
+            {!loading && <span className="sec-c">{filtered.length}</span>}
           </div>
 
+          {/* Paper list */}
           <div className="papers">
             {loading && Array(3).fill(0).map((_, i) => (
-              <div key={i} className="skel" style={{ animationDelay: `${i * 0.1}s` }} />
+              <div key={i} className="skel" style={{ animationDelay: `${i * 0.09}s` }} />
             ))}
+
             {!loading && filtered.map((paper, i) => (
-              <div key={paper.id} className="pcard" style={{ animationDelay: `${i * 0.07}s` }}>
+              <div key={paper.id} className="pcard" style={{ animationDelay: `${i * 0.06}s` }}>
                 <div className="pcard-head">
                   <div className="year-block">
                     <span className="year-big">{paper.year}</span>
                     <span className="year-lbl">Year</span>
                   </div>
                   <div className="head-right">
-                    <div className="badge-row">
-                      <span className="badge b-qp">Q·Paper</span>
-                      {paper.pdf && <span className="badge b-pdf">PDF ✓</span>}
-                    </div>
-                    <button className={`bm-btn ${isBookmarked(paper.id) ? "saved" : ""}`}
+                    {/* Show lang badge only when showing "all" */}
+                    {activeLang === "all" && showLangTabs && (
+                      <span className={`lang-badge ${paper.lang}`}>
+                        {paper.lang === "mal" ? "🌴 Mal" : "🇬🇧 Eng"}
+                      </span>
+                    )}
+                    {paper.pdf && <span className="pdf-badge">PDF ✓</span>}
+                    <button
+                      className={`bm-btn ${isBookmarked(paper.id) ? "saved" : ""}`}
                       onClick={() => toggleBookmark(paper)}
-                      title={isBookmarked(paper.id) ? "Remove bookmark" : "Save paper"}>
+                      title={isBookmarked(paper.id) ? "Remove bookmark" : "Save paper"}
+                    >
                       {isBookmarked(paper.id) ? "⭐" : "☆"}
                     </button>
                   </div>
                 </div>
+
                 <div className="pcard-body">
                   <div className="paper-title">{paper.title}</div>
                   {paper.pdf ? (
                     <div className="actions">
-                      <a href={paper.pdf} target="_blank" rel="noopener noreferrer" className="btn btn-view">👁 View PDF</a>
-                      <button onClick={() => handleDownload(paper)} disabled={downloading === paper.id} className="btn btn-dl">
+                      <a
+                        href={paper.pdf}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-view"
+                      >
+                        👁 View
+                      </a>
+                      <button
+                        onClick={() => handleDownload(paper)}
+                        disabled={downloading === paper.id}
+                        className="btn btn-dl"
+                      >
                         {downloading === paper.id ? "⏳ Saving…" : "⬇ Download"}
                       </button>
                     </div>
@@ -239,17 +489,31 @@ export default function Papers() {
             ))}
           </div>
 
+          {/* Empty state */}
           {!loading && filtered.length === 0 && (
             <div className="empty">
               <span className="empty-icon">{search ? "🔍" : "📭"}</span>
-              <div className="empty-title">{search ? "Nothing found" : "No papers yet"}</div>
-              <div className="empty-sub">{search ? `No results for "${search}"` : "Check back soon!"}</div>
+              <div className="empty-t">
+                {search ? "Nothing found" : "No papers yet"}
+              </div>
+              <div className="empty-s">
+                {search
+                  ? `No results for "${search}"`
+                  : activeLang === "mal"
+                  ? "No Malayalam papers available"
+                  : activeLang === "eng"
+                  ? "No English papers available"
+                  : "Check back soon!"}
+              </div>
             </div>
           )}
 
           <div className="footer">
-            <div className="footer-logo">⭐</div>
-            <div><div className="footer-name">SFI KOTTAKKAL LC</div><div className="footer-sub">Made with love for students</div></div>
+            <div className="footer-ico">⭐</div>
+            <div>
+              <div className="footer-name">SFI Kottakkal LC</div>
+              <div className="footer-sub">Made with love for students</div>
+            </div>
             <div className="footer-heart">❤️</div>
           </div>
         </div>
