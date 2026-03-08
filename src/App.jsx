@@ -2,7 +2,7 @@
 // Add the new imports + routes as shown below
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Classes from "./components/classes";       // or wherever your files are
+import Classes from "./components/classes";    // or wherever your files are
 import Subjects from "./components/Subjects";
 import Papers from "./components/papers";
 import Bookmarks from "./components/Bookmarks";   // NEW
