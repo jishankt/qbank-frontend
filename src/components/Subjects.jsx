@@ -16,282 +16,231 @@ function getIcon(name = "") {
   return subjectIcons[key] || subjectIcons.default;
 }
 
+const sharedStyles = `
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #080b14; --surface: #0e1420; --card: #131929;
+    --border: rgba(255,255,255,0.06); --border-hover: rgba(139,92,246,0.5);
+    --accent: #7c3aed; --accent2: #06b6d4; --text: #f0f4ff; --muted: #6b7a99;
+  }
+`;
+
 function Subjects() {
-
   const { classId } = useParams();
-
   const [subjects, setSubjects] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
-  const [favorites, setFavorites] = useState(
-    JSON.parse(localStorage.getItem("favSubjects")) || []
-  );
 
   useEffect(() => {
-
     setLoading(true);
-
     API.get(`subjects/${classId}/`)
       .then(res => setSubjects(res.data))
       .catch(err => console.log(err))
       .finally(() => setLoading(false));
-
   }, [classId]);
-
-
-  useEffect(() => {
-    localStorage.setItem("favSubjects", JSON.stringify(favorites));
-  }, [favorites]);
-
 
   const filtered = subjects.filter(s =>
     s.name.toLowerCase().includes(search.toLowerCase())
   );
 
-
-  function toggleFavorite(id) {
-
-    if (favorites.includes(id)) {
-      setFavorites(favorites.filter(f => f !== id));
-    } else {
-      setFavorites([...favorites, id]);
-    }
-
-  }
-
-
   return (
+    <div className="qb-root">
+      <style>{`
+        ${sharedStyles}
+        .qb-root {
+          min-height: 100vh;
+          background: var(--bg);
+          font-family: 'DM Sans', sans-serif;
+          color: var(--text);
+          padding: 0 16px 60px;
+          position: relative;
+          overflow-x: hidden;
+        }
+        .qb-root::before {
+          content: '';
+          position: fixed;
+          top: -200px; left: -200px;
+          width: 600px; height: 600px;
+          background: radial-gradient(circle, rgba(124,58,237,0.1) 0%, transparent 70%);
+          pointer-events: none; z-index: 0;
+        }
+        .qb-inner { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; }
 
-    <div className="page">
+        .qb-topbar {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          padding: 24px 0 28px;
+        }
+        .qb-back {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 40px; height: 40px;
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          text-decoration: none;
+          font-size: 16px;
+          color: var(--text);
+          flex-shrink: 0;
+          transition: all 0.2s;
+        }
+        .qb-back:hover {
+          border-color: var(--border-hover);
+          background: rgba(124,58,237,0.1);
+        }
+        .qb-topbar-text h1 {
+          font-family: 'Syne', sans-serif;
+          font-size: 22px;
+          font-weight: 800;
+          letter-spacing: -0.5px;
+        }
+        .qb-topbar-text p { font-size: 13px; color: var(--muted); margin-top: 2px; }
 
-<style>{`
+        .qb-search-wrap { position: relative; margin-bottom: 28px; }
+        .qb-search-icon {
+          position: absolute;
+          left: 16px; top: 50%;
+          transform: translateY(-50%);
+          color: var(--muted); font-size: 15px; pointer-events: none;
+        }
+        .qb-search {
+          width: 100%;
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: 14px;
+          padding: 13px 16px 13px 44px;
+          color: var(--text);
+          font-family: 'DM Sans', sans-serif;
+          font-size: 15px;
+          outline: none;
+          transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .qb-search::placeholder { color: var(--muted); }
+        .qb-search:focus {
+          border-color: rgba(124,58,237,0.5);
+          box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+        }
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+        .qb-label {
+          font-size: 11px; font-weight: 600;
+          letter-spacing: 0.12em; text-transform: uppercase;
+          color: var(--muted); margin-bottom: 14px;
+        }
 
-*{margin:0;padding:0;box-sizing:border-box;}
+        .qb-list { display: flex; flex-direction: column; gap: 10px; }
 
-.page{
-min-height:100vh;
-background:linear-gradient(180deg,#070a13,#0f172a);
-font-family:'Inter',sans-serif;
-color:white;
-padding:20px;
-}
+        .qb-subject-card {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: 16px;
+          padding: 16px 18px;
+          text-decoration: none;
+          color: var(--text);
+          transition: all 0.22s ease;
+          position: relative;
+          overflow: hidden;
+        }
+        .qb-subject-card::after {
+          content: '→';
+          position: absolute;
+          right: 18px;
+          color: var(--muted);
+          font-size: 16px;
+          transition: all 0.2s;
+        }
+        .qb-subject-card:hover {
+          border-color: var(--border-hover);
+          background: rgba(124,58,237,0.06);
+          transform: translateX(4px);
+          box-shadow: 0 8px 24px rgba(124,58,237,0.15);
+        }
+        .qb-subject-card:hover::after {
+          right: 14px;
+          color: #a78bfa;
+        }
+        .qb-subject-card:active { transform: scale(0.98); }
 
-.container{
-max-width:650px;
-margin:auto;
-}
+        .qb-subject-icon {
+          width: 44px; height: 44px;
+          background: rgba(124,58,237,0.12);
+          border-radius: 12px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 22px;
+          flex-shrink: 0;
+        }
+        .qb-subject-name {
+          font-family: 'Syne', sans-serif;
+          font-size: 15px; font-weight: 700;
+        }
+        .qb-subject-hint { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
-/* header */
+        .qb-skeleton {
+          background: linear-gradient(90deg, var(--card) 25%, #1a2235 50%, var(--card) 75%);
+          background-size: 200% 100%;
+          animation: shimmer 1.4s infinite;
+          border-radius: 16px; height: 76px;
+        }
+        @keyframes shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
 
-.topbar{
-display:flex;
-align-items:center;
-gap:14px;
-margin-bottom:30px;
-}
+        .qb-empty { text-align: center; padding: 48px 0; color: var(--muted); }
+        .qb-empty-icon { font-size: 40px; margin-bottom: 12px; }
+      `}</style>
 
-.back{
-width:42px;
-height:42px;
-display:flex;
-align-items:center;
-justify-content:center;
-border-radius:12px;
-background:#12182b;
-border:1px solid rgba(255,255,255,.08);
-text-decoration:none;
-color:white;
-transition:.3s;
-}
+      <div className="qb-inner">
+        <div className="qb-topbar">
+          <Link to="/" className="qb-back">⬅</Link>
+          <div className="qb-topbar-text">
+            <h1>📘 Subjects</h1>
+            <p>{loading ? "Loading..." : `${subjects.length} subject${subjects.length !== 1 ? "s" : ""} available`}</p>
+          </div>
+        </div>
 
-.back:hover{
-border-color:#8b5cf6;
-transform:translateY(-2px);
-}
+        <div className="qb-search-wrap">
+          <span className="qb-search-icon">🔍</span>
+          <input
+            className="qb-search"
+            placeholder="Search subjects..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
 
-.title h1{
-font-size:22px;
-font-weight:700;
-}
+        <div className="qb-label">Available Subjects</div>
 
-.title p{
-font-size:13px;
-color:#94a3b8;
-}
+        <div className="qb-list">
+          {loading && Array(4).fill(0).map((_, i) => (
+            <div key={i} className="qb-skeleton" />
+          ))}
 
-/* search */
+          {!loading && filtered.map(sub => (
+            <Link key={sub.id} to={`/papers/${sub.id}`} className="qb-subject-card">
+              <div className="qb-subject-icon">{getIcon(sub.name)}</div>
+              <div>
+                <div className="qb-subject-name">{sub.name}</div>
+                <div className="qb-subject-hint">View question papers</div>
+              </div>
+            </Link>
+          ))}
+        </div>
 
-.search{
-width:100%;
-padding:13px;
-border-radius:14px;
-border:1px solid rgba(255,255,255,.08);
-background:#12182b;
-color:white;
-outline:none;
-margin-bottom:20px;
-}
-
-/* subject cards */
-
-.list{
-display:flex;
-flex-direction:column;
-gap:12px;
-}
-
-.card{
-display:flex;
-align-items:center;
-gap:16px;
-padding:16px;
-border-radius:16px;
-background:rgba(255,255,255,.04);
-border:1px solid rgba(255,255,255,.08);
-text-decoration:none;
-color:white;
-transition:.3s;
-position:relative;
-}
-
-.card:hover{
-border-color:#8b5cf6;
-transform:translateY(-3px);
-box-shadow:0 12px 28px rgba(139,92,246,.25);
-}
-
-.icon{
-width:46px;
-height:46px;
-display:flex;
-align-items:center;
-justify-content:center;
-background:rgba(139,92,246,.15);
-border-radius:12px;
-font-size:22px;
-}
-
-.name{
-font-size:15px;
-font-weight:700;
-}
-
-.hint{
-font-size:12px;
-color:#94a3b8;
-}
-
-/* favorite */
-
-.favorite{
-position:absolute;
-right:16px;
-top:18px;
-font-size:18px;
-cursor:pointer;
-}
-
-/* badge */
-
-.badge{
-font-size:10px;
-background:#8b5cf6;
-padding:2px 6px;
-border-radius:6px;
-margin-left:8px;
-}
-
-/* empty */
-
-.empty{
-text-align:center;
-margin-top:50px;
-color:#94a3b8;
-}
-
-`}</style>
-
-
-<div className="container">
-
-<div className="topbar">
-
-<Link to="/" className="back">⬅</Link>
-
-<div className="title">
-<h1>Subjects</h1>
-<p>{loading ? "Loading..." : `${subjects.length} subjects available`}</p>
-</div>
-
-</div>
-
-
-<input
-className="search"
-placeholder="Search subjects..."
-value={search}
-onChange={e => setSearch(e.target.value)}
-/>
-
-
-<div className="list">
-
-{loading && <p>Loading subjects...</p>}
-
-{!loading && filtered.map(sub => (
-
-<div key={sub.id} className="card">
-
-<Link
-to={`/papers/${sub.id}`}
-style={{display:"flex",gap:"16px",flex:1,textDecoration:"none",color:"white"}}
->
-
-<div className="icon">{getIcon(sub.name)}</div>
-
-<div>
-<div className="name">
-{sub.name}
-
-{sub.id <= 3 && <span className="badge">Popular</span>}
-
-</div>
-
-<div className="hint">View question papers</div>
-</div>
-
-</Link>
-
-<div
-className="favorite"
-onClick={() => toggleFavorite(sub.id)}
->
-
-{favorites.includes(sub.id) ? "⭐" : "☆"}
-
-</div>
-
-</div>
-
-))}
-
-</div>
-
-
-{!loading && filtered.length === 0 && (
-<div className="empty">
-<p>No subjects match "{search}"</p>
-</div>
-)}
-
-</div>
-
-</div>
-
+        {!loading && filtered.length === 0 && (
+          <div className="qb-empty">
+            <div className="qb-empty-icon">🔍</div>
+            <p>No subjects match "{search}"</p>
+          </div>
+        )}
+      </div>
+    </div>
   );
-
 }
 
 export default Subjects;
