@@ -3,9 +3,9 @@ import { Link } from "react-router-dom";
 import API from "../api";
 
 const classColors = [
-  "#FF6B6B","#FF9F43","#FECA57","#48DBFB",
-  "#FF9FF3","#54A0FF","#5F27CD","#00D2D3",
-  "#1DD1A1","#C8D6E5","#EE5A24","#0652DD"
+  "#E63946","#FF6B35","#F4A261","#E76F51",
+  "#2A9D8F","#457B9D","#1D3557","#A8DADC",
+  "#C77DFF","#E63946","#FF9F1C","#2EC4B6"
 ];
 const classEmoji = ["🎯","📐","🔬","🌍","📜","💡","🧬","🏛️","⚗️","🎨","🎭","🌿"];
 
@@ -30,17 +30,16 @@ function Classes() {
       .catch(err => console.log(err))
       .finally(() => setLoading(false));
 
-    // Only count once per browser session
     const visited = sessionStorage.getItem("visited");
     if (!visited) {
       sessionStorage.setItem("visited", "1");
       API.post("visitors/increment/")
         .then(res => setVisitors(res.data.count))
-        .catch(() => API.get("visitors/").then(res => setVisitors(res.data.count)).catch(() => {}));
+        .catch(() => API.get("visitors/").then(res => setVisitors(res.data.count)).catch(() => setVisitors(0)));
     } else {
       API.get("visitors/")
         .then(res => setVisitors(res.data.count))
-        .catch(() => {});
+        .catch(() => setVisitors(0));
     }
   }, []);
 
@@ -51,147 +50,335 @@ function Classes() {
   return (
     <div className="app">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        :root {
-          --bg: #F2F2F7; --surface: #FFFFFF; --ink: #1C1C1E;
-          --muted: #8E8E93; --border: rgba(0,0,0,0.06);
-          --blue: #007AFF; --shadow: 0 2px 12px rgba(0,0,0,0.06);
-        }
-        body { background: var(--bg); }
-        .app {
-          min-height: 100vh; min-height: 100dvh; background: var(--bg);
-          font-family: 'Plus Jakarta Sans', sans-serif; color: var(--ink);
-          padding-bottom: env(safe-area-inset-bottom, 24px);
-        }
-        .hero {
-          background: var(--surface); padding: 60px 20px 24px;
-          border-bottom: 1px solid var(--border);
-        }
-        .hero-tag {
-          display: inline-flex; align-items: center; gap: 6px;
-          background: rgba(0,122,255,0.1); color: var(--blue);
-          font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
-          text-transform: uppercase; padding: 4px 12px;
-          border-radius: 100px; margin-bottom: 14px;
-        }
-        .hero h1 {
-          font-size: 34px; font-weight: 800; letter-spacing: -0.8px;
-          line-height: 1.1; color: var(--ink); margin-bottom: 6px;
-        }
-        .hero p { font-size: 15px; color: var(--muted); }
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+          --bg: #0D0D0D;
+          --surface: #161616;
+          --surface2: #1E1E1E;
+          --red: #E63946;
+          --red2: #FF6B6B;
+          --gold: #FFD166;
+          --text: #F5F5F5;
+          --muted: #888;
+          --border: rgba(255,255,255,0.07);
+          --shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+
+        body { background: var(--bg); }
+
+        .app {
+          min-height: 100vh; min-height: 100dvh;
+          background: var(--bg);
+          font-family: 'Outfit', sans-serif;
+          color: var(--text);
+          padding-bottom: env(safe-area-inset-bottom, 32px);
+          overflow-x: hidden;
+        }
+
+        /* ── HERO ── */
+        .hero {
+          position: relative;
+          background: var(--surface);
+          padding: 52px 20px 28px;
+          overflow: hidden;
+        }
+        /* diagonal red slash */
+        .hero::before {
+          content: '';
+          position: absolute;
+          top: -60px; right: -40px;
+          width: 220px; height: 220px;
+          background: var(--red);
+          border-radius: 50%;
+          opacity: 0.12;
+          pointer-events: none;
+        }
+        .hero::after {
+          content: '';
+          position: absolute;
+          bottom: 0; left: 0; right: 0;
+          height: 3px;
+          background: linear-gradient(90deg, var(--red), var(--gold), transparent);
+        }
+
+        .hero-top {
+          display: flex; align-items: flex-start;
+          justify-content: space-between; gap: 12px;
+          margin-bottom: 18px;
+        }
+        .star-badge {
+          display: flex; align-items: center; gap: 7px;
+          background: var(--red);
+          color: #fff;
+          font-size: 11px; font-weight: 800;
+          letter-spacing: 0.1em; text-transform: uppercase;
+          padding: 5px 14px; border-radius: 4px;
+        }
+        .star { font-size: 13px; }
+
+        .hero-title {
+          font-family: 'Bebas Neue', sans-serif;
+          font-size: clamp(48px, 14vw, 72px);
+          line-height: 0.95;
+          letter-spacing: 1px;
+          color: var(--text);
+          margin-bottom: 4px;
+        }
+        .hero-title span { color: var(--red); }
+
+        .hero-sub {
+          font-size: 14px; font-weight: 400;
+          color: var(--muted); letter-spacing: 0.03em;
+        }
+
+        /* ── SPONSOR BAND ── */
+        .sponsor-band {
+          background: var(--red);
+          padding: 9px 20px;
+          display: flex; align-items: center; gap: 10px;
+        }
+        .sponsor-star { font-size: 14px; animation: spin 6s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .sponsor-text {
+          font-size: 11px; font-weight: 700;
+          letter-spacing: 0.12em; text-transform: uppercase;
+          color: rgba(255,255,255,0.85);
+        }
+        .sponsor-name {
+          font-size: 13px; font-weight: 800;
+          color: #fff; letter-spacing: 0.05em;
+        }
+        .sponsor-sep { color: rgba(255,255,255,0.4); font-size: 12px; }
+
+        /* ── STATS ROW ── */
         .stats {
-          display: flex; margin: 16px 20px 0;
-          background: var(--surface); border-radius: 16px;
-          overflow: hidden; box-shadow: var(--shadow);
+          display: grid; grid-template-columns: repeat(3, 1fr);
+          gap: 1px; background: var(--border);
+          margin: 0; border-top: none;
         }
         .stat {
-          flex: 1; padding: 14px 12px; text-align: center;
-          border-right: 1px solid var(--border);
+          background: var(--surface); padding: 16px 10px;
+          text-align: center;
         }
-        .stat:last-child { border-right: none; }
-        .stat-num { font-size: 20px; font-weight: 800; color: var(--blue); line-height: 1; margin-bottom: 3px; }
-        .stat-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+        .stat-num {
+          font-family: 'Bebas Neue', sans-serif;
+          font-size: 26px; color: var(--red);
+          line-height: 1; margin-bottom: 3px;
+        }
+        .stat-label {
+          font-size: 10px; font-weight: 700;
+          color: var(--muted); text-transform: uppercase;
+          letter-spacing: 0.1em;
+        }
 
-        /* Visitor banner */
-        .visitor-banner {
-          margin: 14px 20px 0;
-          background: linear-gradient(135deg, #007AFF 0%, #5AC8FA 100%);
-          border-radius: 16px; padding: 16px 18px;
+        /* ── VISITOR COUNTER ── */
+        .visitor-card {
+          margin: 16px 16px 0;
+          background: var(--surface2);
+          border: 1px solid rgba(230,57,70,0.25);
+          border-radius: 14px;
+          padding: 16px 18px;
           display: flex; align-items: center; gap: 14px;
-          box-shadow: 0 4px 20px rgba(0,122,255,0.3);
+          position: relative; overflow: hidden;
         }
-        .visitor-emoji {
-          font-size: 32px; flex-shrink: 0;
-          animation: pulse 2s ease-in-out infinite;
+        .visitor-card::before {
+          content: '';
+          position: absolute; left: 0; top: 0; bottom: 0;
+          width: 4px;
+          background: linear-gradient(180deg, var(--red), var(--gold));
         }
-        @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+        .visitor-icon-wrap {
+          width: 48px; height: 48px; border-radius: 12px;
+          background: rgba(230,57,70,0.12);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 22px; flex-shrink: 0;
+        }
         .visitor-info { flex: 1; }
         .visitor-num {
-          font-size: 28px; font-weight: 800; color: #fff;
-          line-height: 1; letter-spacing: -0.5px;
+          font-family: 'Bebas Neue', sans-serif;
+          font-size: 32px; color: var(--text);
+          line-height: 1; letter-spacing: 1px;
         }
-        .visitor-sub {
-          font-size: 12px; font-weight: 600;
-          color: rgba(255,255,255,0.7); margin-top: 2px;
-          text-transform: uppercase; letter-spacing: 0.06em;
+        .visitor-label {
+          font-size: 11px; font-weight: 600;
+          color: var(--muted); text-transform: uppercase;
+          letter-spacing: 0.1em; margin-top: 1px;
         }
-        .live-pill {
+        .live-badge {
           display: flex; align-items: center; gap: 5px;
-          background: rgba(255,255,255,0.2);
-          padding: 5px 12px; border-radius: 100px;
-          font-size: 12px; font-weight: 700; color: #fff;
-          flex-shrink: 0;
+          background: rgba(230,57,70,0.15);
+          border: 1px solid rgba(230,57,70,0.3);
+          padding: 5px 10px; border-radius: 100px;
+          font-size: 11px; font-weight: 700;
+          color: var(--red); flex-shrink: 0;
         }
         .live-dot {
-          width: 7px; height: 7px; border-radius: 50%; background: #4CD964;
+          width: 6px; height: 6px; border-radius: 50%;
+          background: var(--red);
           animation: blink 1.2s ease-in-out infinite;
         }
         @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
 
         .visitor-skeleton {
-          margin: 14px 20px 0; height: 76px; border-radius: 16px;
-          background: linear-gradient(90deg, #E5E5EA 25%, #F2F2F7 50%, #E5E5EA 75%);
+          margin: 16px 16px 0; height: 80px; border-radius: 14px;
+          background: linear-gradient(90deg, #1a1a1a 25%, #222 50%, #1a1a1a 75%);
           background-size: 200% 100%; animation: shimmer 1.4s infinite;
         }
 
-        .search-wrap { padding: 16px 20px 8px; position: relative; }
-        .search-icon { position: absolute; left: 34px; top: 50%; transform: translateY(-50%); font-size: 15px; pointer-events: none; color: var(--muted); }
+        /* ── SEARCH ── */
+        .search-wrap {
+          padding: 16px 16px 8px; position: relative;
+        }
+        .search-icon {
+          position: absolute; left: 30px; top: 50%;
+          transform: translateY(-50%); font-size: 14px;
+          pointer-events: none; color: var(--muted);
+        }
         .search {
-          width: 100%; background: var(--surface); border: none;
-          border-radius: 12px; padding: 12px 16px 12px 40px;
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: 15px; color: var(--ink); outline: none;
-          box-shadow: var(--shadow); -webkit-appearance: none;
+          width: 100%; background: var(--surface2);
+          border: 1px solid var(--border); border-radius: 10px;
+          padding: 12px 16px 12px 38px;
+          font-family: 'Outfit', sans-serif;
+          font-size: 15px; color: var(--text); outline: none;
+          -webkit-appearance: none;
+          transition: border-color 0.2s;
         }
         .search::placeholder { color: var(--muted); }
-        .search:focus { box-shadow: 0 0 0 3px rgba(0,122,255,0.15), var(--shadow); }
+        .search:focus { border-color: rgba(230,57,70,0.5); }
 
+        /* ── SECTION LABEL ── */
         .section-label {
-          padding: 16px 20px 10px; font-size: 13px; font-weight: 700;
-          color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em;
+          padding: 14px 16px 10px;
+          display: flex; align-items: center; gap: 8px;
+          font-size: 11px; font-weight: 800;
+          color: var(--muted); text-transform: uppercase;
+          letter-spacing: 0.12em;
         }
+        .section-line {
+          flex: 1; height: 1px; background: var(--border);
+        }
+
+        /* ── GRID ── */
         .grid {
           display: grid; grid-template-columns: repeat(2, 1fr);
-          gap: 12px; padding: 0 20px 20px;
+          gap: 10px; padding: 0 16px 16px;
         }
-        .cls-card {
-          background: var(--surface); border-radius: 20px;
-          padding: 18px 16px 16px; text-decoration: none; color: var(--ink);
-          display: flex; flex-direction: column; gap: 10px;
-          box-shadow: var(--shadow); transition: transform 0.15s;
-          -webkit-tap-highlight-color: transparent; position: relative;
-        }
-        .cls-card:active { transform: scale(0.96); }
-        .cls-icon-wrap { width: 46px; height: 46px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
-        .cls-name { font-size: 15px; font-weight: 700; line-height: 1.2; }
-        .cls-sub { font-size: 12px; color: var(--muted); font-weight: 500; margin-top: -4px; }
-        .cls-arrow { position: absolute; right: 14px; top: 14px; font-size: 14px; color: var(--muted); }
 
+        .cls-card {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 14px;
+          padding: 18px 14px 16px;
+          text-decoration: none; color: var(--text);
+          display: flex; flex-direction: column; gap: 12px;
+          position: relative; overflow: hidden;
+          transition: transform 0.15s, border-color 0.2s;
+          -webkit-tap-highlight-color: transparent;
+        }
+        .cls-card::after {
+          content: '';
+          position: absolute; bottom: 0; left: 0; right: 0;
+          height: 2px;
+          background: linear-gradient(90deg, var(--red), transparent);
+          opacity: 0;
+          transition: opacity 0.2s;
+        }
+        .cls-card:active {
+          transform: scale(0.96);
+          border-color: rgba(230,57,70,0.4);
+        }
+        .cls-card:active::after { opacity: 1; }
+
+        .cls-num {
+          position: absolute; top: 12px; right: 14px;
+          font-family: 'Bebas Neue', sans-serif;
+          font-size: 28px; color: rgba(255,255,255,0.05);
+          line-height: 1;
+        }
+        .cls-icon-wrap {
+          width: 44px; height: 44px; border-radius: 12px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 22px;
+        }
+        .cls-name {
+          font-size: 15px; font-weight: 700; line-height: 1.2;
+        }
+        .cls-name span {
+          font-size: 11px; font-weight: 500;
+          color: var(--muted); display: block;
+          margin-top: 2px;
+        }
+        .cls-arrow {
+          display: inline-flex; align-items: center; gap: 4px;
+          font-size: 11px; font-weight: 700;
+          color: var(--red); text-transform: uppercase;
+          letter-spacing: 0.06em;
+        }
+
+        /* ── SKELETON ── */
         .skeleton {
-          background: linear-gradient(90deg, #E5E5EA 25%, #F2F2F7 50%, #E5E5EA 75%);
+          background: linear-gradient(90deg, #1a1a1a 25%, #222 50%, #1a1a1a 75%);
           background-size: 200% 100%; animation: shimmer 1.4s infinite;
-          border-radius: 20px; height: 110px;
+          border-radius: 14px; height: 120px;
         }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
+        /* ── FOOTER ── */
+        .footer {
+          margin: 8px 16px 0;
+          padding: 16px;
+          border-top: 1px solid var(--border);
+          text-align: center;
+          font-size: 11px; color: var(--muted);
+          font-weight: 500; letter-spacing: 0.04em;
+        }
+        .footer strong { color: var(--red); }
+
+        /* ── EMPTY ── */
         .empty { text-align: center; padding: 48px 20px; color: var(--muted); }
         .empty-icon { font-size: 44px; margin-bottom: 12px; }
         .empty p { font-size: 15px; font-weight: 500; }
       `}</style>
 
+      {/* Hero */}
       <div className="hero">
-        <div className="hero-tag">📚 Question Bank</div>
-        <h1>Find Your<br />Papers</h1>
-        <p>Model papers by class & subject</p>
+        <div className="hero-top">
+          <div className="star-badge">
+            <span className="star">★</span> Question Bank
+          </div>
+        </div>
+        <div className="hero-title">
+          Find Your<br /><span>Papers.</span>
+        </div>
+        <div className="hero-sub">Model questions, organized for you</div>
       </div>
 
+      {/* Sponsor band */}
+      <div className="sponsor-band">
+        <span className="sponsor-star">★</span>
+        <span className="sponsor-text">Sponsored by</span>
+        <span className="sponsor-sep">|</span>
+        <span className="sponsor-name">SFI KOTTAKKAL LC</span>
+      </div>
+
+      {/* Stats */}
       {!loading && classes.length > 0 && (
         <div className="stats">
-          <div className="stat"><div className="stat-num">{classes.length}</div><div className="stat-label">Classes</div></div>
-          <div className="stat"><div className="stat-num">∞</div><div className="stat-label">Papers</div></div>
-          <div className="stat"><div className="stat-num">Free</div><div className="stat-label">Always</div></div>
+          <div className="stat">
+            <div className="stat-num">{classes.length}</div>
+            <div className="stat-label">Classes</div>
+          </div>
+          <div className="stat">
+            <div className="stat-num">∞</div>
+            <div className="stat-label">Papers</div>
+          </div>
+          <div className="stat">
+            <div className="stat-num">Free</div>
+            <div className="stat-label">Always</div>
+          </div>
         </div>
       )}
 
@@ -199,40 +386,54 @@ function Classes() {
       {visitors === null || visitors === undefined ? (
         <div className="visitor-skeleton" />
       ) : (
-        <div className="visitor-banner">
-          <div className="visitor-emoji">👥</div>
+        <div className="visitor-card">
+          <div className="visitor-icon-wrap">👥</div>
           <div className="visitor-info">
             <div className="visitor-num">{formatCount(visitors)}</div>
-            <div className="visitor-sub">Total Visitors</div>
+            <div className="visitor-label">Total Visitors</div>
           </div>
-          <div className="live-pill">
+          <div className="live-badge">
             <div className="live-dot" />
             Live
           </div>
         </div>
       )}
 
+      {/* Search */}
       <div className="search-wrap">
         <span className="search-icon">🔍</span>
-        <input className="search" placeholder="Search classes..." value={search} onChange={e => setSearch(e.target.value)} />
+        <input
+          className="search"
+          placeholder="Search classes..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
       </div>
 
-      <div className="section-label">All Classes</div>
+      {/* Section label */}
+      <div className="section-label">
+        All Classes
+        <div className="section-line" />
+      </div>
 
+      {/* Grid */}
       <div className="grid">
-        {loading && Array(6).fill(0).map((_, i) => <div key={i} className="skeleton" />)}
+        {loading && Array(6).fill(0).map((_, i) => (
+          <div key={i} className="skeleton" />
+        ))}
         {!loading && filtered.map((cls, i) => {
           const color = classColors[i % classColors.length];
           return (
             <Link key={cls.id} to={`/subjects/${cls.id}`} className="cls-card">
-              <span className="cls-arrow">›</span>
+              <div className="cls-num">{String(i + 1).padStart(2, "0")}</div>
               <div className="cls-icon-wrap" style={{ background: color + "22" }}>
-                <span>{classEmoji[i % classEmoji.length]}</span>
+                {classEmoji[i % classEmoji.length]}
               </div>
-              <div>
-                <div className="cls-name">Class {cls.name}</div>
-                <div className="cls-sub">View subjects</div>
+              <div className="cls-name">
+                Class {cls.name}
+                <span>View subjects</span>
               </div>
+              <div className="cls-arrow">Open →</div>
             </Link>
           );
         })}
@@ -244,6 +445,11 @@ function Classes() {
           <p>No classes match "{search}"</p>
         </div>
       )}
+
+      {/* Footer */}
+      <div className="footer">
+        Made with ❤️ by <strong>SFI KOTTAKKAL LC</strong>
+      </div>
     </div>
   );
 }
