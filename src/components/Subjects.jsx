@@ -1,30 +1,22 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import API from "../api";
+import API from "../Api";
+import { BottomNav } from "./Classes";
 
 const subjectMeta = {
-  math:        { icon: "📐", bg: "#FFF0F0", color: "#C1121F" },
-  maths:       { icon: "📐", bg: "#FFF0F0", color: "#C1121F" },
-  mathematics: { icon: "📐", bg: "#FFF0F0", color: "#C1121F" },
-  physics:     { icon: "⚡", bg: "#F0F7FF", color: "#1A4FB5" },
-  chemistry:   { icon: "⚗️", bg: "#FFF5F0", color: "#C2410C" },
-  biology:     { icon: "🌿", bg: "#F0FFF6", color: "#1E7A44" },
-  english:     { icon: "✏️", bg: "#FFFBF0", color: "#B45309" },
-  malayalam:   { icon: "🌴", bg: "#F0FDFF", color: "#0E6A87" },
-  hindi:       { icon: "🪔", bg: "#FFF0F0", color: "#C1121F" },
-  history:     { icon: "🏛️", bg: "#F5F0FF", color: "#5B21B6" },
-  geography:   { icon: "🌍", bg: "#F0F7FF", color: "#1A4FB5" },
-  science:     { icon: "🔬", bg: "#F0FFF6", color: "#1E7A44" },
-  computer:    { icon: "💻", bg: "#F5F0FF", color: "#5B21B6" },
-  economics:   { icon: "📊", bg: "#FFFBF0", color: "#B45309" },
-  commerce:    { icon: "💼", bg: "#FFF8F0", color: "#C4611A" },
+  math:{icon:"📐",acc:"#6366F1"},maths:{icon:"📐",acc:"#6366F1"},mathematics:{icon:"📐",acc:"#6366F1"},
+  physics:{icon:"⚡",acc:"#0EA5E9"},chemistry:{icon:"⚗️",acc:"#F59E0B"},
+  biology:{icon:"🌿",acc:"#10B981"},english:{icon:"✏️",acc:"#F97316"},
+  malayalam:{icon:"🌴",acc:"#14B8A6"},hindi:{icon:"🪔",acc:"#EF4444"},
+  history:{icon:"🏛️",acc:"#8B5CF6"},geography:{icon:"🌍",acc:"#06B6D4"},
+  science:{icon:"🔬",acc:"#10B981"},computer:{icon:"💻",acc:"#6366F1"},
+  economics:{icon:"📊",acc:"#F59E0B"},commerce:{icon:"💼",acc:"#EC4899"},
 };
-function getMeta(name = "") {
-  const key = name.toLowerCase().split(" ")[0];
-  return subjectMeta[key] || { icon: "📖", bg: "#F5F5F8", color: "#555" };
+function getMeta(name="") {
+  return subjectMeta[name.toLowerCase().split(" ")[0]] || { icon:"📖", acc:"#6366F1" };
 }
 
-function Subjects() {
+export default function Subjects() {
   const { classId } = useParams();
   const [subjects, setSubjects] = useState([]);
   const [search, setSearch] = useState("");
@@ -32,204 +24,131 @@ function Subjects() {
 
   useEffect(() => {
     setLoading(true);
-    API.get(`subjects/${classId}/`)
-      .then(res => setSubjects(res.data))
-      .catch(err => console.log(err))
-      .finally(() => setLoading(false));
+    API.get(`subjects/${classId}/`).then(r=>setSubjects(r.data)).catch(()=>{}).finally(()=>setLoading(false));
   }, [classId]);
 
-  const filtered = subjects.filter(s =>
-    s.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = subjects.filter(s => s.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="root">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        :root {
-          --bg: #F7F7F8; --white: #FFFFFF; --ink: #111118;
-          --ink2: #3D3D4A; --muted: #9898A8; --border: #E8E8EE;
-          --red: #E63946;
-          --shadow-sm: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
-        }
-        html, body { background: var(--bg); }
-        .root {
-          min-height: 100vh; min-height: 100dvh;
-          background: var(--bg);
-          font-family: 'Inter', -apple-system, sans-serif;
-          color: var(--ink);
-          padding-bottom: max(env(safe-area-inset-bottom), 32px);
-          -webkit-font-smoothing: antialiased;
-        }
+    <>
+      <div className="root">
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap');
+          *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+          :root{--bg:#F6F5F2;--card:#FFFFFF;--bd:rgba(0,0,0,0.07);--bd2:rgba(0,0,0,0.1);--t1:#111110;--t2:rgba(17,17,16,0.48);--t3:rgba(17,17,16,0.26);--ac:#6366F1;}
+          html,body{background:var(--bg);-webkit-font-smoothing:antialiased;overscroll-behavior:none;}
+          .root{min-height:100vh;min-height:100dvh;background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--t1);overflow-x:hidden;padding-bottom:calc(max(env(safe-area-inset-bottom),14px)+68px);}
+          .bg-tex{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 55% 45% at 85% 8%,rgba(99,102,241,0.07) 0%,transparent 65%),radial-gradient(ellipse 45% 35% at 15% 85%,rgba(14,165,233,0.04) 0%,transparent 65%);}
+          .page{position:relative;z-index:2;animation:pi 0.4s ease both;}
+          @keyframes pi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+          @keyframes cardIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+          @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+          @keyframes heartbeat{0%,100%{transform:scale(1)}15%{transform:scale(1.3)}30%{transform:scale(1)}}
 
-        /* Topbar */
-        .topbar {
-          background: var(--white);
-          padding: max(env(safe-area-inset-top), 52px) 20px 18px;
-          border-bottom: 1px solid var(--border);
-          position: sticky; top: 0; z-index: 10;
-        }
-        .topbar-row { display: flex; align-items: center; gap: 12px; }
-        .back-btn {
-          width: 40px; height: 40px; border-radius: 12px;
-          background: var(--bg); border: 1.5px solid var(--border);
-          display: flex; align-items: center; justify-content: center;
-          font-size: 20px; color: var(--ink2);
-          text-decoration: none; flex-shrink: 0;
-          -webkit-tap-highlight-color: transparent; transition: background 0.15s;
-        }
-        .back-btn:active { background: var(--border); }
-        .topbar-info { flex: 1; }
-        .topbar-title {
-          font-size: 22px; font-weight: 800;
-          letter-spacing: -0.4px; color: var(--ink);
-        }
-        .topbar-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+          .topbar{background:rgba(246,245,242,0.92);border-bottom:1px solid var(--bd);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);padding:max(env(safe-area-inset-top),52px) 20px 18px;position:sticky;top:0;z-index:20;}
+          .trow{display:flex;align-items:center;gap:12px;}
+          .back{width:40px;height:40px;border-radius:13px;flex-shrink:0;background:var(--card);border:1px solid var(--bd2);box-shadow:0 1px 4px rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--ac);text-decoration:none;transition:transform 0.2s;-webkit-tap-highlight-color:transparent;}
+          .back:active{transform:scale(0.88);}
+          .ttitle{font-family:'Fraunces',serif;font-size:26px;font-weight:900;letter-spacing:-0.5px;color:var(--t1);}
+          .tsub{font-size:12px;color:var(--t2);margin-top:2px;}
 
-        /* Search */
-        .search-section { padding: 14px 16px 0; }
-        .search-box {
-          display: flex; align-items: center; gap: 10px;
-          background: var(--white); border: 1.5px solid var(--border);
-          border-radius: 12px; padding: 0 14px;
-          box-shadow: var(--shadow-sm); transition: border-color 0.2s;
-        }
-        .search-box:focus-within { border-color: var(--red); box-shadow: 0 0 0 3px rgba(230,57,70,0.08); }
-        .search-ico { font-size: 16px; flex-shrink: 0; opacity: 0.4; }
-        .search-input {
-          flex: 1; border: none; outline: none; padding: 13px 0;
-          font-family: 'Inter', sans-serif; font-size: 15px;
-          color: var(--ink); background: transparent;
-        }
-        .search-input::placeholder { color: var(--muted); }
-        .search-clear {
-          font-size: 16px; cursor: pointer; opacity: 0.5; flex-shrink: 0;
-          padding: 4px; border: none; background: none;
-          -webkit-tap-highlight-color: transparent;
-        }
+          .search-wrap{padding:14px 20px 0;}
+          .sbox{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--bd2);border-radius:16px;padding:0 16px;transition:border-color 0.2s,box-shadow 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.05);}
+          .sbox:focus-within{border-color:rgba(99,102,241,0.4);box-shadow:0 0 0 4px rgba(99,102,241,0.07);}
+          .s-ico{font-size:15px;opacity:0.22;flex-shrink:0;}
+          .s-in{flex:1;border:none;outline:none;padding:14px 0;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--t1);background:transparent;}
+          .s-in::placeholder{color:var(--t3);}
+          .s-clr{background:rgba(0,0,0,0.06);color:var(--t2);width:22px;height:22px;border-radius:6px;border:none;font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 
-        /* Section label */
-        .section-label {
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 16px 16px 10px;
-        }
-        .label-text { font-size: 13px; font-weight: 700; color: var(--ink2); text-transform: uppercase; letter-spacing: 0.08em; }
-        .label-count { font-size: 12px; font-weight: 600; background: #F0F0F5; color: var(--muted); padding: 3px 10px; border-radius: 100px; }
+          .sec-bar{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 12px;}
+          .sec-title{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:0.14em;}
+          .sec-count{font-size:12px;font-weight:700;color:var(--ac);background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.12);padding:3px 11px;border-radius:100px;}
 
-        /* Subject list */
-        .list { padding: 0 16px 20px; display: flex; flex-direction: column; gap: 8px; }
+          .list{padding:0 20px 20px;display:flex;flex-direction:column;gap:8px;}
+          .sub-card{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:16px 18px;text-decoration:none;color:var(--t1);display:flex;align-items:center;gap:14px;transition:transform 0.2s cubic-bezier(0.34,1.56,0.64,1);-webkit-tap-highlight-color:transparent;position:relative;overflow:hidden;animation:cardIn 0.35s ease both;box-shadow:0 1px 4px rgba(0,0,0,0.05);}
+          .sub-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--sa);border-radius:18px 0 0 18px;}
+          .sub-card:active{transform:scale(0.97);}
+          .sub-icon{width:52px;height:52px;border-radius:15px;flex-shrink:0;background:var(--sa-bg);border:1px solid var(--sa-bd);display:flex;align-items:center;justify-content:center;font-size:27px;}
+          .sub-info{flex:1;min-width:0;}
+          .sub-name{font-family:'Fraunces',serif;font-size:17px;font-weight:700;letter-spacing:-0.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--t1);}
+          .sub-hint{font-size:12px;color:var(--t2);margin-top:3px;}
+          .sub-arrow{margin-left:auto;width:34px;height:34px;flex-shrink:0;border-radius:10px;background:var(--sa-bg);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--sa);}
 
-        .subject-card {
-          background: var(--white);
-          border: 1.5px solid var(--border);
-          border-radius: 14px; padding: 14px 16px;
-          text-decoration: none; color: var(--ink);
-          display: flex; align-items: center; gap: 14px;
-          box-shadow: var(--shadow-sm);
-          transition: transform 0.15s;
-          -webkit-tap-highlight-color: transparent;
-        }
-        .subject-card:active { transform: scale(0.98); }
+          .skel{background:linear-gradient(90deg,#f0eeeb 25%,#e7e5e0 50%,#f0eeeb 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:18px;height:84px;border:1px solid var(--bd);}
 
-        .subject-icon-wrap {
-          width: 50px; height: 50px; border-radius: 14px;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 26px; flex-shrink: 0;
-        }
-        .subject-info { flex: 1; min-width: 0; }
-        .subject-name {
-          font-size: 16px; font-weight: 700;
-          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-          letter-spacing: -0.2px;
-        }
-        .subject-hint { font-size: 12px; color: var(--muted); margin-top: 2px; }
-        .subject-arrow {
-          width: 32px; height: 32px; border-radius: 9px;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 18px; font-weight: 600;
-          color: var(--muted); background: var(--bg); flex-shrink: 0;
-        }
+          .empty{text-align:center;padding:70px 20px;}
+          .empty-icon{font-size:56px;display:block;margin-bottom:16px;}
+          .empty-title{font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:var(--t2);margin-bottom:8px;}
+          .empty-sub{font-size:14px;color:var(--t3);}
 
-        /* Skeleton */
-        .skel {
-          background: linear-gradient(90deg, #ececf0 25%, #f5f5f8 50%, #ececf0 75%);
-          background-size: 200% 100%; animation: shimmer 1.4s infinite;
-          border-radius: 14px; height: 78px;
-        }
-        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+          .footer{margin:8px 20px 0;background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:18px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 4px rgba(0,0,0,0.04);}
+          .footer-logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#6366F1,#4F46E5);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;box-shadow:0 4px 14px rgba(99,102,241,0.28);}
+          .footer-name{font-family:'Fraunces',serif;font-size:14px;font-weight:700;color:var(--t1);}
+          .footer-sub{font-size:11px;color:var(--t2);margin-top:2px;}
+          .footer-heart{margin-left:auto;font-size:20px;animation:heartbeat 1.8s ease-in-out infinite;}
+        `}</style>
 
-        .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
-        .empty-icon { font-size: 52px; margin-bottom: 14px; display: block; }
-        .empty-title { font-size: 18px; font-weight: 700; color: var(--ink2); margin-bottom: 6px; }
-        .empty-sub { font-size: 14px; }
-
-        .footer {
-          margin: 8px 16px 0; padding: 20px 16px;
-          background: var(--white); border-radius: 14px;
-          border: 1px solid var(--border);
-          display: flex; flex-direction: column; align-items: center; gap: 4px;
-        }
-        .footer-name { font-size: 13px; font-weight: 800; color: var(--red); }
-        .footer-sub { font-size: 11px; color: var(--muted); }
-      `}</style>
-
-      <div className="topbar">
-        <div className="topbar-row">
-          <Link to="/" className="back-btn">‹</Link>
-          <div className="topbar-info">
-            <div className="topbar-title">Subjects</div>
-            <div className="topbar-sub">
-              {loading ? "Loading..." : `${subjects.length} subject${subjects.length !== 1 ? "s" : ""}`}
+        <div className="bg-tex"/>
+        <div className="page">
+          <div className="topbar">
+            <div className="trow">
+              <Link to="/" className="back">‹</Link>
+              <div>
+                <div className="ttitle">Subjects</div>
+                <div className="tsub">{loading?"Loading…":`${subjects.length} subject${subjects.length!==1?"s":""} available`}</div>
+              </div>
             </div>
+          </div>
+
+          <div className="search-wrap">
+            <div className="sbox">
+              <span className="s-ico">🔍</span>
+              <input className="s-in" placeholder="Search subjects…" value={search} onChange={e=>setSearch(e.target.value)}/>
+              {search && <button className="s-clr" onClick={()=>setSearch("")}>✕</button>}
+            </div>
+          </div>
+
+          <div className="sec-bar">
+            <span className="sec-title">Available Subjects</span>
+            {!loading && <span className="sec-count">{filtered.length}</span>}
+          </div>
+
+          <div className="list">
+            {loading && Array(5).fill(0).map((_,i)=><div key={i} className="skel" style={{animationDelay:`${i*0.07}s`}}/>)}
+            {!loading && filtered.map((sub,i)=>{
+              const {icon,acc} = getMeta(sub.name);
+              const bg = `${acc}12`;
+              const bd = `${acc}30`;
+              return (
+                <Link key={sub.id} to={`/papers/${sub.id}`} className="sub-card"
+                  style={{'--sa':acc,'--sa-bg':bg,'--sa-bd':bd,animationDelay:`${i*0.06}s`}}>
+                  <div className="sub-icon">{icon}</div>
+                  <div className="sub-info">
+                    <div className="sub-name">{sub.name}</div>
+                    <div className="sub-hint">Tap to view question papers</div>
+                  </div>
+                  <div className="sub-arrow">›</div>
+                </Link>
+              );
+            })}
+          </div>
+
+          {!loading && filtered.length===0 && (
+            <div className="empty">
+              <span className="empty-icon">🔍</span>
+              <div className="empty-title">Nothing found</div>
+              <div className="empty-sub">No subjects match "{search}"</div>
+            </div>
+          )}
+
+          <div className="footer">
+            <div className="footer-logo">⭐</div>
+            <div><div className="footer-name">SFI KOTTAKKAL LC</div><div className="footer-sub">Made with love for students</div></div>
+            <div className="footer-heart">❤️</div>
           </div>
         </div>
       </div>
-
-      <div className="search-section">
-        <div className="search-box">
-          <span className="search-ico">🔍</span>
-          <input className="search-input" placeholder="Search subjects..." value={search} onChange={e => setSearch(e.target.value)} />
-          {search && <button className="search-clear" onClick={() => setSearch("")}>✕</button>}
-        </div>
-      </div>
-
-      <div className="section-label">
-        <span className="label-text">Available</span>
-        {!loading && <span className="label-count">{filtered.length}</span>}
-      </div>
-
-      <div className="list">
-        {loading && Array(4).fill(0).map((_, i) => <div key={i} className="skel" />)}
-        {!loading && filtered.map(sub => {
-          const { icon, bg, color } = getMeta(sub.name);
-          return (
-            <Link key={sub.id} to={`/papers/${sub.id}`} className="subject-card">
-              <div className="subject-icon-wrap" style={{ background: bg }}>{icon}</div>
-              <div className="subject-info">
-                <div className="subject-name" style={{ color }}>{sub.name}</div>
-                <div className="subject-hint">View question papers</div>
-              </div>
-              <div className="subject-arrow">›</div>
-            </Link>
-          );
-        })}
-      </div>
-
-      {!loading && filtered.length === 0 && (
-        <div className="empty">
-          <span className="empty-icon">🔍</span>
-          <div className="empty-title">Nothing found</div>
-          <div className="empty-sub">No subjects match "{search}"</div>
-        </div>
-      )}
-
-      <div className="footer">
-        <div className="footer-name">★ SFI KOTTAKKAL LC</div>
-        <div className="footer-sub">Made with love for students</div>
-      </div>
-    </div>
+      <BottomNav/>
+    </>
   );
 }
-
-export default Subjects;
