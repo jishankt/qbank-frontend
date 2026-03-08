@@ -81,7 +81,7 @@ export default function About() {
 
           {/* Stats */}
           <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8, padding:"14px 20px 0" }}>
-            {[{v:"12+",k:"Classes"},{v:"50+",k:"Subjects"},{v:"200+",k:"Papers"},{v:"∞",k:"Free"}].map(({v,k})=>(
+            {[{v:"3+",k:"Classes"},{v:"50+",k:"Subjects"},{v:"100+",k:"Papers"},{v:"Always",k:"Free"}].map(({v,k})=>(
               <div key={k} style={{ background:"var(--white)", border:"1px solid var(--line)", borderRadius:14, padding:"14px 6px", textAlign:"center", boxShadow:"0 1px 4px rgba(0,0,0,0.04)" }}>
                 <div style={{ fontFamily:"var(--font)", fontSize:18, fontWeight:900, color:"var(--ink)", marginBottom:3 }}>{v}</div>
                 <div style={{ fontFamily:"var(--font)", fontSize:9, fontWeight:700, color:"var(--ink3)", textTransform:"uppercase", letterSpacing:"0.12em" }}>{k}</div>
