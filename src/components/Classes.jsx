@@ -3,9 +3,9 @@ import { Link } from "react-router-dom";
 import API from "../api";
 
 const classColors = [
-  "#E63946","#FF6B35","#F4A261","#E76F51",
-  "#2A9D8F","#457B9D","#1D3557","#A8DADC",
-  "#C77DFF","#E63946","#FF9F1C","#2EC4B6"
+  "#00FF87","#00D4FF","#FF6B6B","#FFD166",
+  "#C77DFF","#FF9F43","#00FF87","#00D4FF",
+  "#FF6B6B","#FFD166","#C77DFF","#FF9F43"
 ];
 const classEmoji = ["🎯","📐","🔬","🌍","📜","💡","🧬","🏛️","⚗️","🎨","🎭","🌿"];
 
@@ -55,408 +55,477 @@ function Classes() {
   return (
     <div className="app">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Clash+Display:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap');
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-          --bg: #0D0D0D;
-          --surface: #161616;
-          --surface2: #1E1E1E;
-          --red: #E63946;
-          --red2: #FF6B6B;
+          --bg: #050508;
+          --bg2: #0A0A10;
+          --card: #0F0F18;
+          --card2: #141420;
+          --neon: #00FF87;
+          --neon2: #00D4FF;
+          --pink: #FF3CAC;
           --gold: #FFD166;
-          --text: #F5F5F5;
-          --muted: #888;
-          --border: rgba(255,255,255,0.07);
-          --shadow: 0 4px 20px rgba(0,0,0,0.4);
+          --text: #FFFFFF;
+          --text2: #B0B0C8;
+          --muted: #505068;
+          --border: rgba(255,255,255,0.06);
+          --border2: rgba(0,255,135,0.2);
+          --glow: rgba(0,255,135,0.15);
         }
 
-        body { background: var(--bg); }
+        body { background: var(--bg); margin: 0; }
 
         .app {
           min-height: 100vh; min-height: 100dvh;
           background: var(--bg);
-          font-family: 'Outfit', sans-serif;
+          font-family: 'Barlow', sans-serif;
           color: var(--text);
-          padding-bottom: env(safe-area-inset-bottom, 32px);
+          padding-bottom: env(safe-area-inset-bottom, 40px);
           overflow-x: hidden;
+          position: relative;
         }
+
+        /* Background mesh */
+        .app::before {
+          content: '';
+          position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+          background:
+            radial-gradient(ellipse 80% 40% at 50% -10%, rgba(0,255,135,0.08) 0%, transparent 60%),
+            radial-gradient(ellipse 60% 40% at 80% 80%, rgba(0,212,255,0.05) 0%, transparent 60%);
+          pointer-events: none; z-index: 0;
+        }
+
+        .inner { position: relative; z-index: 1; }
 
         /* ── HERO ── */
         .hero {
+          padding: 56px 20px 32px;
           position: relative;
-          background: var(--surface);
-          padding: 52px 20px 28px;
-          overflow: hidden;
-        }
-        /* diagonal red slash */
-        .hero::before {
-          content: '';
-          position: absolute;
-          top: -60px; right: -40px;
-          width: 220px; height: 220px;
-          background: var(--red);
-          border-radius: 50%;
-          opacity: 0.12;
-          pointer-events: none;
-        }
-        .hero::after {
-          content: '';
-          position: absolute;
-          bottom: 0; left: 0; right: 0;
-          height: 3px;
-          background: linear-gradient(90deg, var(--red), var(--gold), transparent);
         }
 
-        .hero-top {
-          display: flex; align-items: flex-start;
-          justify-content: space-between; gap: 12px;
-          margin-bottom: 18px;
+        .hero-eyebrow {
+          display: flex; align-items: center; gap: 8px;
+          margin-bottom: 16px;
         }
-        .star-badge {
-          display: flex; align-items: center; gap: 7px;
-          background: var(--red);
-          color: #fff;
-          font-size: 11px; font-weight: 800;
-          letter-spacing: 0.1em; text-transform: uppercase;
-          padding: 5px 14px; border-radius: 4px;
+        .eyebrow-dot {
+          width: 8px; height: 8px; border-radius: 50%;
+          background: var(--neon);
+          box-shadow: 0 0 8px var(--neon);
+          animation: pulse-dot 2s ease-in-out infinite;
         }
-        .star { font-size: 13px; }
+        @keyframes pulse-dot {
+          0%,100% { box-shadow: 0 0 8px var(--neon); transform: scale(1); }
+          50% { box-shadow: 0 0 16px var(--neon), 0 0 32px rgba(0,255,135,0.3); transform: scale(1.2); }
+        }
+        .eyebrow-text {
+          font-size: 11px; font-weight: 600;
+          letter-spacing: 0.18em; text-transform: uppercase;
+          color: var(--neon);
+        }
 
         .hero-title {
-          font-family: 'Bebas Neue', sans-serif;
-          font-size: clamp(48px, 14vw, 72px);
-          line-height: 0.95;
-          letter-spacing: 1px;
-          color: var(--text);
-          margin-bottom: 4px;
+          font-family: 'Barlow Condensed', sans-serif;
+          font-size: clamp(52px, 16vw, 80px);
+          font-weight: 900;
+          line-height: 0.9;
+          letter-spacing: -1px;
+          margin-bottom: 12px;
         }
-        .hero-title span { color: var(--red); }
-
-        .hero-sub {
-          font-size: 14px; font-weight: 400;
-          color: var(--muted); letter-spacing: 0.03em;
+        .hero-title .line2 {
+          background: linear-gradient(90deg, var(--neon), var(--neon2));
+          -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+          background-clip: text;
         }
 
-        /* ── SPONSOR BAND ── */
-        .sponsor-band {
-          background: var(--red);
-          padding: 9px 20px;
+        .hero-desc {
+          font-size: 14px; font-weight: 300;
+          color: var(--text2); line-height: 1.5;
+          max-width: 280px;
+        }
+
+        /* ── SPONSOR TAG ── */
+        .sponsor-tag {
+          margin: 0 20px;
+          background: linear-gradient(135deg, rgba(0,255,135,0.08), rgba(0,212,255,0.08));
+          border: 1px solid var(--border2);
+          border-radius: 12px;
+          padding: 12px 16px;
           display: flex; align-items: center; gap: 10px;
         }
-        .sponsor-star { font-size: 14px; animation: spin 6s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .sponsor-text {
-          font-size: 11px; font-weight: 700;
-          letter-spacing: 0.12em; text-transform: uppercase;
-          color: rgba(255,255,255,0.85);
+        .sponsor-icon {
+          width: 32px; height: 32px; border-radius: 8px;
+          background: linear-gradient(135deg, var(--neon), var(--neon2));
+          display: flex; align-items: center; justify-content: center;
+          font-size: 16px; font-weight: 900; color: #000;
+          flex-shrink: 0;
+        }
+        .sponsor-info { flex: 1; }
+        .sponsor-label {
+          font-size: 10px; font-weight: 600;
+          color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em;
         }
         .sponsor-name {
-          font-size: 13px; font-weight: 800;
-          color: #fff; letter-spacing: 0.05em;
+          font-size: 13px; font-weight: 700;
+          color: var(--neon); letter-spacing: 0.04em;
         }
-        .sponsor-sep { color: rgba(255,255,255,0.4); font-size: 12px; }
+        .sponsor-badge {
+          font-size: 10px; font-weight: 800;
+          background: var(--neon); color: #000;
+          padding: 3px 8px; border-radius: 4px;
+          letter-spacing: 0.06em; text-transform: uppercase;
+        }
 
-        /* ── STATS ROW ── */
-        .stats {
+        /* ── STATS ── */
+        .stats-row {
           display: grid; grid-template-columns: repeat(4, 1fr);
-          gap: 1px; background: var(--border);
-          margin: 0; border-top: none;
+          gap: 10px; padding: 16px 20px 0;
         }
-        .stat {
-          background: var(--surface); padding: 16px 10px;
-          text-align: center;
+        .stat-box {
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: 12px; padding: 14px 10px;
+          text-align: center; position: relative; overflow: hidden;
+        }
+        .stat-box::before {
+          content: ''; position: absolute;
+          top: 0; left: 0; right: 0; height: 2px;
+          background: linear-gradient(90deg, var(--neon), transparent);
         }
         .stat-num {
-          font-family: 'Bebas Neue', sans-serif;
-          font-size: 26px; color: var(--red);
-          line-height: 1; margin-bottom: 3px;
+          font-family: 'Barlow Condensed', sans-serif;
+          font-size: 24px; font-weight: 800;
+          color: var(--neon); line-height: 1; margin-bottom: 4px;
         }
         .stat-label {
-          font-size: 10px; font-weight: 700;
-          color: var(--muted); text-transform: uppercase;
-          letter-spacing: 0.1em;
+          font-size: 9px; font-weight: 700;
+          color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em;
         }
 
-        /* ── VISITOR COUNTER ── */
+        /* ── VISITOR ── */
+        .visitor-wrap { padding: 16px 20px 0; }
         .visitor-card {
-          margin: 16px 16px 0;
-          background: var(--surface2);
-          border: 1px solid rgba(230,57,70,0.25);
-          border-radius: 14px;
-          padding: 16px 18px;
-          display: flex; align-items: center; gap: 14px;
+          background: var(--card);
+          border: 1px solid var(--border2);
+          border-radius: 16px; padding: 18px;
+          display: flex; align-items: center; gap: 16px;
           position: relative; overflow: hidden;
         }
         .visitor-card::before {
           content: '';
-          position: absolute; left: 0; top: 0; bottom: 0;
-          width: 4px;
-          background: linear-gradient(180deg, var(--red), var(--gold));
+          position: absolute; inset: 0;
+          background: linear-gradient(135deg, rgba(0,255,135,0.04), rgba(0,212,255,0.04));
+          pointer-events: none;
         }
-        .visitor-icon-wrap {
-          width: 48px; height: 48px; border-radius: 12px;
-          background: rgba(230,57,70,0.12);
+        .visitor-glow {
+          position: absolute; top: -20px; right: -20px;
+          width: 80px; height: 80px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(0,255,135,0.15), transparent 70%);
+          pointer-events: none;
+        }
+        .visitor-icon {
+          width: 52px; height: 52px; border-radius: 14px;
+          background: linear-gradient(135deg, rgba(0,255,135,0.15), rgba(0,212,255,0.1));
+          border: 1px solid rgba(0,255,135,0.2);
           display: flex; align-items: center; justify-content: center;
-          font-size: 22px; flex-shrink: 0;
+          font-size: 24px; flex-shrink: 0;
         }
-        .visitor-info { flex: 1; }
+        .visitor-data { flex: 1; }
         .visitor-num {
-          font-family: 'Bebas Neue', sans-serif;
-          font-size: 32px; color: var(--text);
-          line-height: 1; letter-spacing: 1px;
+          font-family: 'Barlow Condensed', sans-serif;
+          font-size: 36px; font-weight: 800;
+          color: var(--text); line-height: 1;
+          letter-spacing: -0.5px;
         }
-        .visitor-label {
+        .visitor-sub {
           font-size: 11px; font-weight: 600;
-          color: var(--muted); text-transform: uppercase;
-          letter-spacing: 0.1em; margin-top: 1px;
+          color: var(--text2); margin-top: 2px;
+          text-transform: uppercase; letter-spacing: 0.1em;
         }
-        .live-badge {
+        .live-chip {
           display: flex; align-items: center; gap: 5px;
-          background: rgba(230,57,70,0.15);
-          border: 1px solid rgba(230,57,70,0.3);
-          padding: 5px 10px; border-radius: 100px;
-          font-size: 11px; font-weight: 700;
-          color: var(--red); flex-shrink: 0;
+          background: rgba(0,255,135,0.1);
+          border: 1px solid rgba(0,255,135,0.25);
+          padding: 6px 12px; border-radius: 100px;
+          font-size: 11px; font-weight: 800;
+          color: var(--neon); flex-shrink: 0;
+          letter-spacing: 0.06em; text-transform: uppercase;
         }
         .live-dot {
           width: 6px; height: 6px; border-radius: 50%;
-          background: var(--red);
+          background: var(--neon);
+          box-shadow: 0 0 6px var(--neon);
           animation: blink 1.2s ease-in-out infinite;
         }
         @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
 
         .visitor-skeleton {
-          margin: 16px 16px 0; height: 80px; border-radius: 14px;
-          background: linear-gradient(90deg, #1a1a1a 25%, #222 50%, #1a1a1a 75%);
+          margin: 0 20px; height: 88px; border-radius: 16px;
+          background: linear-gradient(90deg, #0f0f18 25%, #141420 50%, #0f0f18 75%);
           background-size: 200% 100%; animation: shimmer 1.4s infinite;
         }
+        .visitor-skeleton-wrap { padding: 16px 20px 0; }
 
         /* ── SEARCH ── */
-        .search-wrap {
-          padding: 16px 16px 8px; position: relative;
-        }
+        .search-wrap { padding: 16px 20px 4px; position: relative; }
         .search-icon {
-          position: absolute; left: 30px; top: 50%;
+          position: absolute; left: 34px; top: 50%;
           transform: translateY(-50%); font-size: 14px;
           pointer-events: none; color: var(--muted);
         }
         .search {
-          width: 100%; background: var(--surface2);
-          border: 1px solid var(--border); border-radius: 10px;
-          padding: 12px 16px 12px 38px;
-          font-family: 'Outfit', sans-serif;
+          width: 100%; background: var(--card);
+          border: 1px solid var(--border); border-radius: 12px;
+          padding: 13px 16px 13px 40px;
+          font-family: 'Barlow', sans-serif;
           font-size: 15px; color: var(--text); outline: none;
-          -webkit-appearance: none;
-          transition: border-color 0.2s;
+          -webkit-appearance: none; transition: border-color 0.2s, box-shadow 0.2s;
         }
         .search::placeholder { color: var(--muted); }
-        .search:focus { border-color: rgba(230,57,70,0.5); }
-
-        /* ── SECTION LABEL ── */
-        .section-label {
-          padding: 14px 16px 10px;
-          display: flex; align-items: center; gap: 8px;
-          font-size: 11px; font-weight: 800;
-          color: var(--muted); text-transform: uppercase;
-          letter-spacing: 0.12em;
+        .search:focus {
+          border-color: rgba(0,255,135,0.4);
+          box-shadow: 0 0 0 3px rgba(0,255,135,0.06);
         }
-        .section-line {
-          flex: 1; height: 1px; background: var(--border);
+
+        /* ── SECTION ── */
+        .section-head {
+          padding: 16px 20px 12px;
+          display: flex; align-items: center; justify-content: space-between;
+        }
+        .section-title {
+          font-size: 11px; font-weight: 700;
+          color: var(--muted); text-transform: uppercase; letter-spacing: 0.14em;
+        }
+        .section-count {
+          font-size: 11px; font-weight: 700;
+          color: var(--neon);
         }
 
         /* ── GRID ── */
         .grid {
           display: grid; grid-template-columns: repeat(2, 1fr);
-          gap: 10px; padding: 0 16px 16px;
+          gap: 10px; padding: 0 20px 20px;
         }
 
         .cls-card {
-          background: var(--surface);
+          background: var(--card);
           border: 1px solid var(--border);
-          border-radius: 14px;
-          padding: 18px 14px 16px;
+          border-radius: 16px;
+          padding: 18px 16px 16px;
           text-decoration: none; color: var(--text);
           display: flex; flex-direction: column; gap: 12px;
           position: relative; overflow: hidden;
-          transition: transform 0.15s, border-color 0.2s;
+          transition: transform 0.18s, border-color 0.18s;
           -webkit-tap-highlight-color: transparent;
         }
         .cls-card::after {
-          content: '';
-          position: absolute; bottom: 0; left: 0; right: 0;
-          height: 2px;
-          background: linear-gradient(90deg, var(--red), transparent);
-          opacity: 0;
-          transition: opacity 0.2s;
+          content: ''; position: absolute;
+          inset: 0; border-radius: 16px;
+          background: linear-gradient(135deg, rgba(255,255,255,0.03), transparent);
+          pointer-events: none;
         }
         .cls-card:active {
-          transform: scale(0.96);
-          border-color: rgba(230,57,70,0.4);
+          transform: scale(0.95);
+          border-color: rgba(0,255,135,0.3);
         }
-        .cls-card:active::after { opacity: 1; }
 
-        .cls-num {
-          position: absolute; top: 12px; right: 14px;
-          font-family: 'Bebas Neue', sans-serif;
-          font-size: 28px; color: rgba(255,255,255,0.05);
-          line-height: 1;
+        .cls-top-row {
+          display: flex; align-items: flex-start;
+          justify-content: space-between;
         }
-        .cls-icon-wrap {
+        .cls-icon {
           width: 44px; height: 44px; border-radius: 12px;
           display: flex; align-items: center; justify-content: center;
           font-size: 22px;
         }
-        .cls-name {
-          font-size: 15px; font-weight: 700; line-height: 1.2;
+        .cls-index {
+          font-family: 'Barlow Condensed', sans-serif;
+          font-size: 13px; font-weight: 700;
+          color: var(--muted); letter-spacing: 0.06em;
         }
-        .cls-name span {
-          font-size: 11px; font-weight: 500;
-          color: var(--muted); display: block;
-          margin-top: 2px;
+
+        .cls-body { flex: 1; }
+        .cls-name {
+          font-family: 'Barlow Condensed', sans-serif;
+          font-size: 20px; font-weight: 800;
+          line-height: 1.1; letter-spacing: 0.02em;
+        }
+        .cls-sub {
+          font-size: 11px; font-weight: 400;
+          color: var(--muted); margin-top: 2px;
+        }
+
+        .cls-footer {
+          display: flex; align-items: center;
+          justify-content: space-between;
+        }
+        .cls-cta {
+          font-size: 11px; font-weight: 700;
+          text-transform: uppercase; letter-spacing: 0.1em;
         }
         .cls-arrow {
-          display: inline-flex; align-items: center; gap: 4px;
-          font-size: 11px; font-weight: 700;
-          color: var(--red); text-transform: uppercase;
-          letter-spacing: 0.06em;
+          width: 24px; height: 24px; border-radius: 6px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 14px; font-weight: 700;
         }
 
         /* ── SKELETON ── */
         .skeleton {
-          background: linear-gradient(90deg, #1a1a1a 25%, #222 50%, #1a1a1a 75%);
+          background: linear-gradient(90deg, #0f0f18 25%, #141420 50%, #0f0f18 75%);
           background-size: 200% 100%; animation: shimmer 1.4s infinite;
-          border-radius: 14px; height: 120px;
+          border-radius: 16px; height: 130px;
         }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
         /* ── FOOTER ── */
         .footer {
-          margin: 8px 16px 0;
-          padding: 16px;
+          margin: 4px 20px 0; padding: 20px 0;
           border-top: 1px solid var(--border);
-          text-align: center;
-          font-size: 11px; color: var(--muted);
-          font-weight: 500; letter-spacing: 0.04em;
+          display: flex; align-items: center; justify-content: center; gap: 8px;
         }
-        .footer strong { color: var(--red); }
+        .footer-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--neon); }
+        .footer-text { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 0.08em; }
+        .footer-brand { font-size: 12px; font-weight: 800; color: var(--neon); letter-spacing: 0.06em; }
 
         /* ── EMPTY ── */
-        .empty { text-align: center; padding: 48px 20px; color: var(--muted); }
-        .empty-icon { font-size: 44px; margin-bottom: 12px; }
-        .empty p { font-size: 15px; font-weight: 500; }
+        .empty { text-align: center; padding: 52px 20px; color: var(--muted); }
+        .empty-icon { font-size: 48px; margin-bottom: 14px; }
+        .empty-title {
+          font-family: 'Barlow Condensed', sans-serif;
+          font-size: 22px; font-weight: 800; color: var(--text2);
+          margin-bottom: 6px; letter-spacing: 0.5px;
+        }
+        .empty p { font-size: 14px; }
       `}</style>
 
-      {/* Hero */}
-      <div className="hero">
-        <div className="hero-top">
-          <div className="star-badge">
-            <span className="star">★</span> Question Bank
+      <div className="inner">
+        {/* Hero */}
+        <div className="hero">
+          <div className="hero-eyebrow">
+            <div className="eyebrow-dot" />
+            <span className="eyebrow-text">Question Bank · Kerala</span>
           </div>
+          <div className="hero-title">
+            FIND<br />
+            <span className="line2">YOUR PAPERS.</span>
+          </div>
+          <p className="hero-desc">Model question papers organized by class & subject. Free, always.</p>
         </div>
-        <div className="hero-title">
-          Find Your<br /><span>Papers.</span>
+
+        {/* Sponsor */}
+        <div className="sponsor-tag">
+          <div className="sponsor-icon">★</div>
+          <div className="sponsor-info">
+            <div className="sponsor-label">Sponsored by</div>
+            <div className="sponsor-name">SFI KOTTAKKAL LC</div>
+          </div>
+          <div className="sponsor-badge">Official</div>
         </div>
-        <div className="hero-sub">Model questions, organized for you</div>
-      </div>
 
-      {/* Sponsor band */}
-      <div className="sponsor-band">
-        <span className="sponsor-star">★</span>
-        <span className="sponsor-text">Sponsored by</span>
-        <span className="sponsor-sep">|</span>
-        <span className="sponsor-name">SFI KOTTAKKAL LC</span>
-      </div>
+        {/* Stats */}
+        {!loading && (
+          <div className="stats-row">
+            <div className="stat-box">
+              <div className="stat-num">{classes.length}</div>
+              <div className="stat-label">Classes</div>
+            </div>
+            <div className="stat-box">
+              <div className="stat-num">{totalPapers ?? "..."}</div>
+              <div className="stat-label">Papers</div>
+            </div>
+            <div className="stat-box">
+              <div className="stat-num">Free</div>
+              <div className="stat-label">Always</div>
+            </div>
+            <div className="stat-box">
+              <div className="stat-num">★</div>
+              <div className="stat-label">SFI</div>
+            </div>
+          </div>
+        )}
 
-      {!loading && classes.length > 0 && (
-        <div className="stats">
-          <div className="stat">
-            <div className="stat-num">{classes.length}</div>
-            <div className="stat-label">Classes</div>
+        {/* Visitor */}
+        {visitors === null || visitors === undefined ? (
+          <div className="visitor-skeleton-wrap">
+            <div className="visitor-skeleton" />
           </div>
-          <div className="stat">
-            <div className="stat-num">{totalPapers ?? "..."}</div>
-            <div className="stat-label">Papers</div>
-          </div>
-          <div className="stat">
-            <div className="stat-num">Free</div>
-            <div className="stat-label">Always</div>
-          </div>
-          <div className="stat">
-            <div className="stat-num">★</div>
-            <div className="stat-label">SFI</div>
-          </div>
-        </div>
-      )}
-
-      {/* Visitor Counter */}
-      {visitors === null || visitors === undefined ? (
-        <div className="visitor-skeleton" />
-      ) : (
-        <div className="visitor-card">
-          <div className="visitor-icon-wrap">👥</div>
-          <div className="visitor-info">
-            <div className="visitor-num">{formatCount(visitors)}</div>
-            <div className="visitor-label">Total Visitors</div>
-          </div>
-          <div className="live-badge">
-            <div className="live-dot" />
-            Live
-          </div>
-        </div>
-      )}
-
-      {/* Search */}
-      <div className="search-wrap">
-        <span className="search-icon">🔍</span>
-        <input
-          className="search"
-          placeholder="Search classes..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
-      </div>
-
-      {/* Section label */}
-      <div className="section-label">
-        All Classes
-        <div className="section-line" />
-      </div>
-
-      {/* Grid */}
-      <div className="grid">
-        {loading && Array(6).fill(0).map((_, i) => (
-          <div key={i} className="skeleton" />
-        ))}
-        {!loading && filtered.map((cls, i) => {
-          const color = classColors[i % classColors.length];
-          return (
-            <Link key={cls.id} to={`/subjects/${cls.id}`} className="cls-card">
-              <div className="cls-num">{String(i + 1).padStart(2, "0")}</div>
-              <div className="cls-icon-wrap" style={{ background: color + "22" }}>
-                {classEmoji[i % classEmoji.length]}
+        ) : (
+          <div className="visitor-wrap">
+            <div className="visitor-card">
+              <div className="visitor-glow" />
+              <div className="visitor-icon">👥</div>
+              <div className="visitor-data">
+                <div className="visitor-num">{formatCount(visitors)}</div>
+                <div className="visitor-sub">Total Visitors</div>
               </div>
-              <div className="cls-name">
-                Class {cls.name}
-                <span>View subjects</span>
+              <div className="live-chip">
+                <div className="live-dot" />
+                Live
               </div>
-              <div className="cls-arrow">Open →</div>
-            </Link>
-          );
-        })}
-      </div>
+            </div>
+          </div>
+        )}
 
-      {!loading && filtered.length === 0 && (
-        <div className="empty">
-          <div className="empty-icon">🔍</div>
-          <p>No classes match "{search}"</p>
+        {/* Search */}
+        <div className="search-wrap">
+          <span className="search-icon">🔍</span>
+          <input
+            className="search"
+            placeholder="Search classes..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
         </div>
-      )}
 
-      {/* Footer */}
-      <div className="footer">
-        Made with ❤️ by <strong>SFI KOTTAKKAL LC</strong>
+        <div className="section-head">
+          <span className="section-title">All Classes</span>
+          {!loading && <span className="section-count">{filtered.length} found</span>}
+        </div>
+
+        <div className="grid">
+          {loading && Array(6).fill(0).map((_, i) => (
+            <div key={i} className="skeleton" />
+          ))}
+          {!loading && filtered.map((cls, i) => {
+            const color = classColors[i % classColors.length];
+            return (
+              <Link key={cls.id} to={`/subjects/${cls.id}`} className="cls-card">
+                <div className="cls-top-row">
+                  <div className="cls-icon" style={{ background: color + "18" }}>
+                    {classEmoji[i % classEmoji.length]}
+                  </div>
+                  <span className="cls-index">{String(i + 1).padStart(2, "0")}</span>
+                </div>
+                <div className="cls-body">
+                  <div className="cls-name" style={{ color }}>Class {cls.name}</div>
+                  <div className="cls-sub">View subjects</div>
+                </div>
+                <div className="cls-footer">
+                  <span className="cls-cta" style={{ color }}>Open</span>
+                  <div className="cls-arrow" style={{ background: color + "18", color }}>→</div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+
+        {!loading && filtered.length === 0 && (
+          <div className="empty">
+            <div className="empty-icon">🔍</div>
+            <div className="empty-title">Nothing Found</div>
+            <p>No classes match "{search}"</p>
+          </div>
+        )}
+
+        <div className="footer">
+          <div className="footer-dot" />
+          <span className="footer-text">Made with ♥ by</span>
+          <span className="footer-brand">SFI KOTTAKKAL LC</span>
+          <div className="footer-dot" />
+        </div>
       </div>
     </div>
   );
