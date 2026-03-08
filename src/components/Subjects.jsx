@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import API from "../Api";
+import API from "../api";
 import { BottomNav } from "./Classes";
 
 const subjectMeta = {

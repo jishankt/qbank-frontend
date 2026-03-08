@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import API from "../Api";
+import API from "../api";
 import SplashScreen from "./SplashScreen";
 import Confetti from "./Cofetti";
 
