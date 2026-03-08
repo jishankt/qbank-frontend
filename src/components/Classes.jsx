@@ -10,9 +10,12 @@ const classColors = [
 const classEmoji = ["🎯","📐","🔬","🌍","📜","💡","🧬","🏛️","⚗️","🎨","🎭","🌿"];
 
 function formatCount(n) {
-  if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
-  if (n >= 1000) return (n / 1000).toFixed(1) + "K";
-  return n.toString();
+  if (n === null || n === undefined) return "0";
+  const num = parseInt(n, 10);
+  if (isNaN(num)) return "0";
+  if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
+  if (num >= 1000) return (num / 1000).toFixed(1) + "K";
+  return num.toString();
 }
 
 function Classes() {
@@ -193,7 +196,7 @@ function Classes() {
       )}
 
       {/* Visitor Counter */}
-      {visitors === null ? (
+      {visitors === null || visitors === undefined ? (
         <div className="visitor-skeleton" />
       ) : (
         <div className="visitor-banner">
