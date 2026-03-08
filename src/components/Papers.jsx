@@ -9,8 +9,10 @@ const { subjectId } = useParams()
 const [papers,setPapers] = useState([])
 const [loading,setLoading] = useState(true)
 const [search,setSearch] = useState("")
+const [sort,setSort] = useState("year")
 const [viewYear,setViewYear] = useState("All")
-const [downloading,setDownloading] = useState(null)
+const [favorites,setFavorites] = useState([])
+const [preview,setPreview] = useState(null)
 
 useEffect(()=>{
 
@@ -23,9 +25,11 @@ API.get(`papers/${subjectId}/`)
 
 },[subjectId])
 
-const years = ["All",...new Set(papers.map(p=>p.year).sort((a,b)=>b-a))]
 
-const filtered = papers.filter(p=>{
+const years=["All",...new Set(papers.map(p=>p.year).sort((a,b)=>b-a))]
+
+
+let filtered = papers.filter(p=>{
 
 const matchSearch = p.title.toLowerCase().includes(search.toLowerCase())
 const matchYear = viewYear==="All" || p.year===viewYear
@@ -34,46 +38,30 @@ return matchSearch && matchYear
 
 })
 
-const handleDownload = async(paper)=>{
 
-if(!paper.pdf) return
-
-setDownloading(paper.id)
-
-try{
-
-const response = await fetch(paper.pdf)
-const blob = await response.blob()
-
-const url = window.URL.createObjectURL(blob)
-
-const link = document.createElement("a")
-
-link.href = url
-link.download = `${paper.title}_${paper.year}.pdf`
-
-document.body.appendChild(link)
-
-link.click()
-
-link.remove()
-
-setTimeout(()=>URL.revokeObjectURL(url),5000)
-
-}
-catch(err){
-
-alert("Download failed")
-
+if(sort==="year"){
+filtered = filtered.sort((a,b)=>b.year-a.year)
 }
 
-finally{
+if(sort==="title"){
+filtered = filtered.sort((a,b)=>a.title.localeCompare(b.title))
+}
 
-setDownloading(null)
+
+function toggleFavorite(id){
+
+if(favorites.includes(id)){
+
+setFavorites(favorites.filter(f=>f!==id))
+
+}else{
+
+setFavorites([...favorites,id])
 
 }
 
 }
+
 
 return(
 
@@ -83,37 +71,33 @@ return(
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-}
+*{margin:0;padding:0;box-sizing:border-box}
 
 .page{
 
 min-height:100vh;
-background:linear-gradient(180deg,#070a13,#0f172a);
+background:linear-gradient(180deg,#06090f,#0f172a);
 font-family:'Inter',sans-serif;
 color:white;
 padding:20px;
 
 }
 
-/* container */
-
 .container{
-max-width:650px;
+
+max-width:720px;
 margin:auto;
+
 }
 
-/* topbar */
+/* header */
 
-.topbar{
+.header{
 
 display:flex;
 align-items:center;
 gap:14px;
-margin-bottom:26px;
+margin-bottom:25px;
 
 }
 
@@ -125,18 +109,10 @@ display:flex;
 align-items:center;
 justify-content:center;
 border-radius:12px;
-background:#12182b;
+background:#111827;
 border:1px solid rgba(255,255,255,.08);
 text-decoration:none;
 color:white;
-transition:.3s;
-
-}
-
-.back:hover{
-
-border-color:#8b5cf6;
-transform:translateY(-2px);
 
 }
 
@@ -156,49 +132,41 @@ color:#94a3b8;
 
 /* search */
 
-.searchBox{
+.search{
 
-position:relative;
 margin-bottom:16px;
 
 }
 
-.searchBox input{
+.search input{
 
 width:100%;
-padding:13px 16px;
+padding:13px;
 border-radius:14px;
 border:1px solid rgba(255,255,255,.08);
-background:#12182b;
+background:#111827;
 color:white;
 outline:none;
 
 }
 
-.searchBox input:focus{
-
-border-color:#8b5cf6;
-box-shadow:0 0 0 3px rgba(139,92,246,.15);
-
-}
-
 /* filters */
 
-.filters{
+.controls{
 
 display:flex;
 gap:8px;
-overflow:auto;
-margin-bottom:22px;
+margin-bottom:20px;
+flex-wrap:wrap;
 
 }
 
 .pill{
 
-padding:6px 14px;
+padding:6px 12px;
 border-radius:100px;
 border:1px solid rgba(255,255,255,.08);
-background:#12182b;
+background:#111827;
 color:#94a3b8;
 cursor:pointer;
 
@@ -212,16 +180,17 @@ border:none;
 
 }
 
-/* paper card */
+/* card */
 
 .card{
 
-background:#12182b;
+background:#111827;
 border:1px solid rgba(255,255,255,.08);
 border-radius:16px;
-padding:18px;
+padding:16px;
 margin-bottom:12px;
 transition:.3s;
+position:relative;
 
 }
 
@@ -229,7 +198,7 @@ transition:.3s;
 
 border-color:#8b5cf6;
 transform:translateY(-2px);
-box-shadow:0 10px 25px rgba(139,92,246,.25);
+box-shadow:0 12px 28px rgba(139,92,246,.25);
 
 }
 
@@ -244,7 +213,7 @@ margin-bottom:6px;
 
 display:flex;
 gap:8px;
-margin-bottom:12px;
+margin-bottom:10px;
 
 }
 
@@ -254,15 +223,6 @@ background:#8b5cf622;
 padding:3px 8px;
 border-radius:6px;
 font-size:12px;
-
-}
-
-.badge{
-
-font-size:11px;
-background:#ffffff10;
-padding:3px 8px;
-border-radius:6px;
 
 }
 
@@ -278,20 +238,18 @@ gap:8px;
 .btn{
 
 flex:1;
-padding:10px;
+padding:9px;
 border-radius:10px;
-font-size:13px;
-cursor:pointer;
 border:none;
-text-decoration:none;
-text-align:center;
+cursor:pointer;
+font-size:13px;
 
 }
 
 .view{
 
 background:#8b5cf622;
-color:#a78bfa;
+color:#c4b5fd;
 
 }
 
@@ -302,19 +260,57 @@ color:#34d399;
 
 }
 
-.btn:hover{
+/* favorite */
 
-transform:translateY(-1px);
+.favorite{
+
+position:absolute;
+top:14px;
+right:14px;
+cursor:pointer;
+font-size:18px;
 
 }
 
-/* empty */
+/* preview modal */
 
-.empty{
+.modal{
 
-text-align:center;
-margin-top:40px;
-color:#94a3b8;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.7);
+display:flex;
+align-items:center;
+justify-content:center;
+z-index:100;
+
+}
+
+.modalBox{
+
+width:90%;
+height:90%;
+background:#000;
+border-radius:10px;
+overflow:hidden;
+
+}
+
+.modal iframe{
+
+width:100%;
+height:100%;
+border:none;
+
+}
+
+.close{
+
+position:absolute;
+top:20px;
+right:30px;
+font-size:28px;
+cursor:pointer;
 
 }
 
@@ -323,22 +319,22 @@ color:#94a3b8;
 
 <div className="container">
 
-<div className="topbar">
+<div className="header">
 
 <Link to={-1} className="back">⬅</Link>
 
 <div className="title">
 
-<h1>Papers</h1>
+<h1>Question Papers</h1>
 
-<p>{loading ? "Loading..." : `${filtered.length} papers found`}</p>
-
-</div>
+<p>{filtered.length} papers available</p>
 
 </div>
 
+</div>
 
-<div className="searchBox">
+
+<div className="search">
 
 <input
 placeholder="Search papers..."
@@ -349,17 +345,24 @@ onChange={e=>setSearch(e.target.value)}
 </div>
 
 
-<div className="filters">
+<div className="controls">
+
+<select value={sort} onChange={e=>setSort(e.target.value)} className="pill">
+
+<option value="year">Sort by Year</option>
+<option value="title">Sort by Title</option>
+
+</select>
 
 {years.map(y=>(
 
 <button
 key={y}
-className={`pill ${viewYear===y ? "active" : ""}`}
+className={`pill ${viewYear===y ? "active":""}`}
 onClick={()=>setViewYear(y)}
 >
 
-{y==="All" ? "All" : y}
+{y==="All" ? "All Years" : y}
 
 </button>
 
@@ -368,15 +371,20 @@ onClick={()=>setViewYear(y)}
 </div>
 
 
-{loading ?
-
-<p>Loading papers...</p>
-
-:
+{loading ? <p>Loading...</p> :
 
 filtered.map(paper=>(
 
 <div key={paper.id} className="card">
+
+<div
+className="favorite"
+onClick={()=>toggleFavorite(paper.id)}
+>
+
+{favorites.includes(paper.id) ? "⭐" : "☆"}
+
+</div>
 
 <div className="paperTitle">
 
@@ -388,44 +396,32 @@ filtered.map(paper=>(
 
 <span className="year">{paper.year}</span>
 
-{paper.pdf && <span className="badge">PDF</span>}
-
 </div>
 
-
-{paper.pdf ?
 
 <div className="actions">
 
-<a
-href={paper.pdf}
-target="_blank"
-rel="noopener noreferrer"
-className="btn view"
->
-
-👁 View
-
-</a>
-
-
 <button
-onClick={()=>handleDownload(paper)}
-disabled={downloading===paper.id}
-className="btn download"
+className="btn view"
+onClick={()=>setPreview(paper.pdf)}
 >
 
-{downloading===paper.id ? "⏳ Downloading..." : "⬇ Download"}
+👁 Preview
 
 </button>
 
+
+<a
+href={paper.pdf}
+download
+className="btn download"
+>
+
+⬇ Download
+
+</a>
+
 </div>
-
-:
-
-<p>No PDF available</p>
-
-}
 
 </div>
 
@@ -434,13 +430,17 @@ className="btn download"
 }
 
 
-{!loading && filtered.length===0 && (
+{preview && (
 
-<div className="empty">
+<div className="modal">
 
-<h3>No papers found</h3>
+<div className="close" onClick={()=>setPreview(null)}>✖</div>
 
-<p>Try another search</p>
+<div className="modalBox">
+
+<iframe src={preview}></iframe>
+
+</div>
 
 </div>
 

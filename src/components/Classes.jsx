@@ -6,22 +6,49 @@ const classIcons = ["🎯","🔬","📐","🌍","🎨","📜","💡","🧬","�
 
 function Classes() {
 
-  const [classes,setClasses] = useState([])
-  const [search,setSearch] = useState("")
-  const [loading,setLoading] = useState(true)
+const [classes,setClasses] = useState([])
+const [search,setSearch] = useState("")
+const [loading,setLoading] = useState(true)
+const [favorites,setFavorites] = useState(
+JSON.parse(localStorage.getItem("favClasses")) || []
+)
 
-  useEffect(()=>{
-    API.get("classes/")
-      .then(res => setClasses(res.data))
-      .catch(err => console.log(err))
-      .finally(()=> setLoading(false))
-  },[])
+useEffect(()=>{
 
-  const filtered = classes.filter(cls =>
-    cls.name.toLowerCase().includes(search.toLowerCase())
-  )
+API.get("classes/")
+.then(res => setClasses(res.data))
+.catch(err => console.log(err))
+.finally(()=> setLoading(false))
 
-  return (
+},[])
+
+useEffect(()=>{
+
+localStorage.setItem("favClasses",JSON.stringify(favorites))
+
+},[favorites])
+
+
+function toggleFavorite(id){
+
+if(favorites.includes(id)){
+
+setFavorites(favorites.filter(f=>f!==id))
+
+}else{
+
+setFavorites([...favorites,id])
+
+}
+
+}
+
+
+const filtered = classes.filter(cls =>
+cls.name.toLowerCase().includes(search.toLowerCase())
+)
+
+return(
 
 <div className="page">
 
@@ -39,7 +66,7 @@ color:white;
 padding:40px 20px;
 }
 
-/* HEADER */
+/* header */
 
 .header{
 text-align:center;
@@ -47,7 +74,7 @@ margin-bottom:40px;
 }
 
 .header h1{
-font-size:48px;
+font-size:46px;
 font-weight:800;
 background:linear-gradient(90deg,#8b5cf6,#06b6d4);
 -webkit-background-clip:text;
@@ -59,33 +86,33 @@ color:#94a3b8;
 margin-top:6px;
 }
 
-/* SEARCH */
+/* counter */
+
+.counter{
+margin-top:8px;
+font-size:13px;
+color:#64748b;
+}
+
+/* search */
 
 .searchBox{
 max-width:420px;
 margin:auto;
 margin-bottom:30px;
-position:relative;
 }
 
 .searchBox input{
 width:100%;
 padding:14px 18px;
 border-radius:14px;
-border:1px solid rgba(255,255,255,0.08);
+border:1px solid rgba(255,255,255,.08);
 background:#12182b;
 color:white;
 outline:none;
-font-size:15px;
-transition:0.3s;
 }
 
-.searchBox input:focus{
-border-color:#8b5cf6;
-box-shadow:0 0 0 3px rgba(139,92,246,0.15);
-}
-
-/* GRID */
+/* grid */
 
 .grid{
 max-width:900px;
@@ -95,53 +122,39 @@ grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
 gap:18px;
 }
 
-/* CARD */
+/* card */
 
 .card{
-
-background:rgba(255,255,255,0.04);
-border:1px solid rgba(255,255,255,0.08);
-backdrop-filter:blur(10px);
+background:rgba(255,255,255,.04);
+border:1px solid rgba(255,255,255,.08);
 border-radius:18px;
-padding:28px 16px;
+padding:26px 16px;
 text-align:center;
 text-decoration:none;
 color:white;
-transition:0.35s;
+transition:.35s;
 position:relative;
-overflow:hidden;
 }
 
 .card:hover{
-
 transform:translateY(-6px);
 border-color:#8b5cf6;
-box-shadow:0 20px 40px rgba(124,58,237,0.25);
+box-shadow:0 20px 40px rgba(124,58,237,.25);
 }
 
-/* glow effect */
+/* favorite */
 
-.card::before{
-
-content:'';
+.favorite{
 position:absolute;
-top:-50%;
-left:-50%;
-width:200%;
-height:200%;
-background:radial-gradient(circle,#8b5cf633,transparent 60%);
-opacity:0;
-transition:0.5s;
-}
-
-.card:hover::before{
-opacity:1;
+top:10px;
+right:12px;
+cursor:pointer;
+font-size:18px;
 }
 
 /* icon */
 
 .icon{
-
 font-size:32px;
 margin-bottom:10px;
 }
@@ -149,24 +162,29 @@ margin-bottom:10px;
 /* label */
 
 .label{
-
 font-weight:700;
 font-size:16px;
 margin-bottom:4px;
 }
 
 .sub{
-
 font-size:12px;
 color:#94a3b8;
 }
 
-/* loading */
+/* skeleton */
 
-.loading{
-text-align:center;
-color:#94a3b8;
-margin-top:50px;
+.skeleton{
+height:120px;
+border-radius:18px;
+background:linear-gradient(90deg,#12182b 25%,#1e293b 50%,#12182b 75%);
+background-size:200% 100%;
+animation:shimmer 1.4s infinite;
+}
+
+@keyframes shimmer{
+0%{background-position:200% 0}
+100%{background-position:-200% 0}
 }
 
 /* empty */
@@ -185,6 +203,10 @@ color:#94a3b8;
 <h1>Question Bank</h1>
 <p>Select your class to explore papers</p>
 
+<div className="counter">
+{loading ? "Loading..." : `${classes.length} classes available`}
+</div>
+
 </div>
 
 
@@ -201,18 +223,34 @@ onChange={e=>setSearch(e.target.value)}
 
 {loading ?
 
-<div className="loading">Loading classes...</div>
+<div className="grid">
+
+{Array(6).fill(0).map((_,i)=>(
+<div key={i} className="skeleton"></div>
+))}
+
+</div>
 
 :
 
 <div className="grid">
 
-{filtered.map((cls,i)=> (
+{filtered.map((cls,i)=>(
+
+<div key={cls.id} className="card">
+
+<div
+className="favorite"
+onClick={()=>toggleFavorite(cls.id)}
+>
+
+{favorites.includes(cls.id) ? "⭐" : "☆"}
+
+</div>
 
 <Link
-key={cls.id}
 to={`/subjects/${cls.id}`}
-className="card"
+style={{textDecoration:"none",color:"white"}}
 >
 
 <div className="icon">
@@ -229,13 +267,15 @@ View subjects →
 
 </Link>
 
+</div>
+
 ))}
 
 </div>
 }
 
 
-{!loading && filtered.length === 0 && (
+{!loading && filtered.length===0 && (
 
 <div className="empty">
 
@@ -248,7 +288,8 @@ View subjects →
 
 </div>
 
-  )
+)
+
 }
 
 export default Classes
