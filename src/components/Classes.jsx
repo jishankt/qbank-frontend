@@ -270,7 +270,7 @@ function Classes() {
         <div className="qb-hero">
           <div className="qb-badge">📚 Question Bank</div>
           <h1>Find Your Papers</h1>
-          <p>Past papers, organized by class & subject</p>
+          <p>Model papers, organized by class & subject</p>
         </div>
 
         {/* Stats */}
