@@ -18,10 +18,10 @@ const FEATURES = [
 ];
 
 const STATS = [
-  { val: "3+", label: "Classes" },
+  { val: "12+", label: "Classes" },
   { val: "50+", label: "Subjects" },
-  { val: "50+", label: "Papers" },
-  { val: "ALWAYS", label: "Free" },
+  { val: "200+", label: "Papers" },
+  { val: "∞", label: "Free" },
 ];
 
 export default function About() {
@@ -162,16 +162,6 @@ export default function About() {
               the best preparation tools — at zero cost.
             </div>
             <div className="hero-version">✦ Version 2.0 · Aurora Edition</div>
-          </div>
-
-          {/* Stats */}
-          <div className="stats-row">
-            {STATS.map(({val,label})=>(
-              <div className="stat-box" key={label}>
-                <div className="stat-n">{val}</div>
-                <div className="stat-k">{label}</div>
-              </div>
-            ))}
           </div>
 
           {/* Features */}
