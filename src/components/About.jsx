@@ -18,10 +18,10 @@ const FEATURES = [
 ];
 
 const STATS = [
-  { val: "12+", label: "Classes" },
+  { val: "3+", label: "Classes" },
   { val: "50+", label: "Subjects" },
-  { val: "200+", label: "Papers" },
-  { val: "∞", label: "Free" },
+  { val: "100+", label: "Papers" },
+  { val: "Always", label: "Free" },
 ];
 
 export default function About() {
