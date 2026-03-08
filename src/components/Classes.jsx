@@ -23,12 +23,17 @@ function Classes() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [visitors, setVisitors] = useState(null);
+  const [totalPapers, setTotalPapers] = useState(null);
 
   useEffect(() => {
     API.get("classes/")
       .then(res => setClasses(res.data))
       .catch(err => console.log(err))
       .finally(() => setLoading(false));
+
+    API.get("papers/count/")
+      .then(res => setTotalPapers(res.data.count))
+      .catch(() => setTotalPapers("?"));
 
     const visited = sessionStorage.getItem("visited");
     if (!visited) {
@@ -155,7 +160,7 @@ function Classes() {
 
         /* ── STATS ROW ── */
         .stats {
-          display: grid; grid-template-columns: repeat(3, 1fr);
+          display: grid; grid-template-columns: repeat(4, 1fr);
           gap: 1px; background: var(--border);
           margin: 0; border-top: none;
         }
@@ -364,7 +369,6 @@ function Classes() {
         <span className="sponsor-name">SFI KOTTAKKAL LC</span>
       </div>
 
-      {/* Stats */}
       {!loading && classes.length > 0 && (
         <div className="stats">
           <div className="stat">
@@ -372,12 +376,16 @@ function Classes() {
             <div className="stat-label">Classes</div>
           </div>
           <div className="stat">
-            <div className="stat-num">∞</div>
+            <div className="stat-num">{totalPapers ?? "..."}</div>
             <div className="stat-label">Papers</div>
           </div>
           <div className="stat">
             <div className="stat-num">Free</div>
             <div className="stat-label">Always</div>
+          </div>
+          <div className="stat">
+            <div className="stat-num">★</div>
+            <div className="stat-label">SFI</div>
           </div>
         </div>
       )}
